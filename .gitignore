@@ -3,6 +3,7 @@ data
 
 ## Make sure we don't send over environement variables
 .env
+users.yaml
 
 ## Other useless stuff
 *.egg-info
