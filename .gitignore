@@ -1,19 +1,21 @@
-## Make sure we don't include data
+## Make sure we don't include datasets
 data
 
-## Make sure we don't send over environement variables
+## Make sure we don't send over environement/secret variables
 .env
 users.yaml
-
-## Other useless stuff
-*.egg-info
 
 # OS generated files #
 ######################
 .DS_Store
 __MACOSX
 # Jupiter Notebook #
+notebook
 .pytest_cache
 __pycache__
 *checkpoint.ipynb
 *.ipynb_checkpoints
+
+## Other useless stuff
+*.egg-info
+.vscode

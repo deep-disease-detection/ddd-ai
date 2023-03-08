@@ -1,1 +1,3 @@
-google-cloud-storage
+numpy
+opencv-python
+tensorflow
