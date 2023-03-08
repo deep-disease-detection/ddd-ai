@@ -17,6 +17,7 @@ from sklearn.utils import shuffle
 from tensorflow import keras
 from keras.utils import to_categorical
 import tensorflow as tf
+from shutil import copyfile
 
 # define global variables
 path = "../data/TEM virus dataset/context_virus_1nm_256x256"
@@ -289,6 +290,17 @@ def make_imagettes(img: np.array, particles: list) -> list:
     return imagettes
 
 
+def rotate_flip(img_path, nbr_passage:int):
+
+    degree = [cv2.ROTATE_90_CLOCKWISE, cv2.ROTATE_180, cv2.ROTATE_90_COUNTERCLOCKWISE]
+    flipping_param = [1,0, -1]
+    combinaison = list(product(degree,flipping_param))
+    print(img_path)
+    img = cv2.imread(img_path)
+    new_image = cv2.rotate(img, combinaison[nbr_passage][0])
+    new_image = cv2.flip(new_image, combinaison[nbr_passage][1])
+    return new_image
+
 def save_imagettes(imagettes: list, split_set: str, virus: str, file: str,
                    format: str):
     for i, img in enumerate(imagettes):
@@ -375,5 +387,57 @@ def preprocess_viruses(split_set: str = 'train'):
             save_imagettes(imagettes, split_set, virus, file, "png")
 
 
+
+def augmented_picture():
+    train_path = 'data/dataset-processed/TEM virus dataset/context_virus_1nm_256x256/train'
+    virus_list = os.listdir(train_path)
+    destination_path = os.path.join('data/dataset-processed/TEM virus dataset/context_virus_1nm_256x256', 'augmented_train')
+
+
+    for virus in virus_list:
+        source_path = os.path.join(train_path, virus)
+        dest_virus_folder = os.path.join(destination_path, virus)
+        file_name_list = os.listdir(source_path)
+
+        if virus in os.listdir(destination_path):
+            pass
+        else:
+            print(f"Creating directory for {virus}")
+            os.mkdir(os.path.join(destination_path, virus))
+
+
+        nbr_of_imagettes = len(os.listdir(source_path))
+        if nbr_of_imagettes < 736:
+            # copy paste all images in another directory
+            for image in file_name_list:
+                copyfile(os.path.join(source_path, image), os.path.join(dest_virus_folder, image))
+
+            #augmentation des images
+            nbre_passage = 0
+            while len(os.listdir(dest_virus_folder)) < 736:
+                for image in file_name_list:
+                    new_image = rotate_flip(os.path.join(source_path,image), nbre_passage)
+                    print(f'AUG{nbre_passage}{image}')
+                    print(len(os.listdir(dest_virus_folder)))
+                    cv2.imwrite(os.path.join(dest_virus_folder, f'AUG{nbre_passage}{image}'), new_image)
+                    if len(os.listdir(dest_virus_folder)) == 736:
+                        print('done')
+                        break
+                nbre_passage = nbre_passage + 1
+                if nbre_passage >=9:
+                    print('not enough picture')
+
+        else:
+            print(len(file_name_list))
+            # randomly copy 736 images
+            for i in range(736):
+                index = np.random.randint(len(os.path.join(source_path, virus)))
+                file_name = file_name_list[index]
+                #pour ne pas faire de doublons
+                if file_name not in os.listdir(os.path.join(destination_path, virus)):
+                    copyfile(os.path.join(source_path, file_name), os.path.join(destination_path, virus, file_name))
+
+
 if __name__ == "__main__":
+    #augmented_picture()
     preprocess_viruses(sys.argv[1])
