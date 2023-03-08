@@ -76,7 +76,8 @@ def encoder_and_get_categories_from_y(y: np.ndarray):
     return encoded_y
 
 
-def get_tif_images_from_directories(path: str, train_path: str, validation_path: str, test_path: str):
+def get_tif_images_from_directories(path: str, train_path: str,
+                                    validation_path: str, test_path: str):
     '''
     takes a path to a folder containing folders of images and returns
     a numpy array of images and a numpy array of labels
@@ -94,19 +95,28 @@ def get_tif_images_from_directories(path: str, train_path: str, validation_path:
             y_test (numpy array): numpy array of test labels
     '''
     # get the train images and labels
-    X_train, y_train = extract_X_y_from_tif_image_folders(os.path.join(path, train_path))
+    X_train, y_train = extract_X_y_from_tif_image_folders(
+        os.path.join(path, train_path))
     y_train = encoder_and_get_categories_from_y(y_train)
     # get the validation images and labels
-    X_validation, y_validation = extract_X_y_from_tif_image_folders(os.path.join(path, validation_path))
+    X_validation, y_validation = extract_X_y_from_tif_image_folders(
+        os.path.join(path, validation_path))
     y_validation = encoder_and_get_categories_from_y(y_validation)
     # get the test images and labels
-    X_test, y_test = extract_X_y_from_tif_image_folders(os.path.join(path, test_path))
+    X_test, y_test = extract_X_y_from_tif_image_folders(
+        os.path.join(path, test_path))
     y_test = encoder_and_get_categories_from_y(y_test)
 
     return X_train, y_train, X_validation, y_validation, X_test, y_test
 
 
-def get_samples_of_data(X_train: np.array, y_train: np.array, X_validation: np.array, y_validation: np.array, X_test: np.array, y_test: np.array, sample_rate: float = 0.1):
+def get_samples_of_data(X_train: np.array,
+                        y_train: np.array,
+                        X_validation: np.array,
+                        y_validation: np.array,
+                        X_test: np.array,
+                        y_test: np.array,
+                        sample_rate: float = 0.1):
     '''
     takes the original train, validation and test data and returns
     a sample of the data to be used for testing models and training
@@ -292,14 +302,14 @@ def preprocess_viruses(split_set: str = 'train'):
 
     #Check if process directories exist, otherwise create them
     try:
-        os.listdir(PROCESS_DATA_PATH)
+        os.listdir(os.path.join(PROCESS_DATA_PATH, split_set))
     except FileNotFoundError:
         print("There is no process directory, creating it for you")
         os.makedirs(os.path.join(PROCESS_DATA_PATH, split_set))
 
     #Loading structure and data dictionnaries
-    particle_dict = get_dic_center()
-    pic_dict = get_pic_mesure()
+    particle_dict = get_dic_center(split_set)
+    pic_dict = get_pic_mesure(split_set)
 
     #Subsetting to specific folders if test mode
     print(f'Executing in test mode for {VIRUSES}')
