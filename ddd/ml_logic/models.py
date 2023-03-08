@@ -234,7 +234,7 @@ def initialize_DenseNet_model():
     drop_2 = Dropout(0.3)
     flatten_layer = Flatten()
     dense_layer = Dense(256, activation='relu')
-    prediction_layer = Dense(4, activation='softmax')
+    prediction_layer = Dense(14, activation='softmax')
 
     model = Sequential([
             base_model,
