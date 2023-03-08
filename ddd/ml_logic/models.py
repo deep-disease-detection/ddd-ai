@@ -6,10 +6,12 @@ from tensorflow import keras
 from keras.layers import Conv2D, BatchNormalization, MaxPooling2D, Flatten, Dense, Dropout, Input, concatenate
 from keras.regularizers import l2
 from keras.callbacks import EarlyStopping
-from keras.models import Model
+from keras.models import Model, Sequential
 from keras.utils import to_categorical
 import tensorflow as tf
 from keras.applications.vgg19 import VGG19
+from keras.applications.densenet import DenseNet201
+
 
 reg_kernel = l2(0.01)
 
@@ -205,5 +207,78 @@ def train_VGG19_model(X_train: np.ndarray, y_train: np.ndarray,
                         epochs=30,
                         batch_size=32,
                         verbose=1)
+
+    return model, history
+
+
+
+
+
+def initialize_DenseNet_model():
+    """
+    Create the DensetNet201 model
+        Parameters:
+            None
+        Returns:
+            model (keras.models.Model): DenseNet 201 model
+
+    """
+    base_model = DenseNet201(weights="imagenet", include_top=False, input_shape=(256,256,3))
+
+    # Set the first layers to be untrainable
+    base_model.trainable = False
+
+    add_layer = Dense(1024, activation='relu')
+    drop_1 = Dropout(0.3)
+    add_layer2 = Dense(1024, activation='relu')
+    drop_2 = Dropout(0.3)
+    flatten_layer = Flatten()
+    dense_layer = Dense(256, activation='relu')
+    prediction_layer = Dense(4, activation='softmax')
+
+    model = Sequential([
+            base_model,
+            add_layer,
+            drop_1,
+            add_layer2,
+            drop_2,
+            flatten_layer,
+            dense_layer,
+            prediction_layer
+        ])
+
+    model.compile(loss='categorical_crossentropy',
+                  optimizer="adam",
+                  metrics=['accuracy'])
+
+    return model
+
+
+
+
+def train_DenseNet_model(X_train, X_val):
+    """
+     Train the DN201 model with the given data
+        Parameters:
+            TBD
+        Returns:
+            model (keras.models.Model): trfained model
+            history (keras.callbacks.History): training history
+    """
+
+    # Transform the images from grayscale to RGB in order to have 3 channels for the DN201
+    X_train = X_train.map(lambda x,y : (tf.image.grayscale_to_rgb(x),y))
+    X_val = X_val.map(lambda x,y : (tf.image.grayscale_to_rgb(x),y))
+
+
+    model = initialize_DenseNet_model()
+    es = EarlyStopping(patience=5, verbose=1)
+
+    history = model.fit(X_train,
+                    validation_data=X_val,
+                    batch_size=32,
+                    epochs=30,
+                    verbose=1,
+                    callbacks=[es])
 
     return model, history
