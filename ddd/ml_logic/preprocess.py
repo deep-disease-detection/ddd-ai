@@ -5,6 +5,7 @@ from ddd.utils import average_coord
 import numpy as np
 import cv2
 import tensorflow as tf
+import sys
 
 
 def get_dic_center(split_set: str = 'train'):
@@ -119,7 +120,6 @@ def resize_particles(particles: list, file: str, pic_dict: dict) -> list:
     Method that repositions the particles following the resize
     Uses picture meta data from pic_dict
     '''
-
     for i in range(len(particles)):
         particles[i] = (particles[i][0] * pic_dict[file]['Yscale'],
                         particles[i][1] * pic_dict[file]['Xscale'])
@@ -142,26 +142,32 @@ def make_imagettes(img: np.array, particles: list) -> list:
     return imagettes
 
 
-def save_imagettes(imagettes: list, split_set: str, virus: str, file: str):
+def save_imagettes(imagettes: list, split_set: str, virus: str, file: str,
+                   format: str):
     for i, img in enumerate(imagettes):
-        imagette_file_name = f'{file}_{str(i)}.tif'
+        imagette_file_name = f'{file}_{str(i)}.{format}'
         destination_path = os.path.join(PROCESS_DATA_PATH, split_set, virus,
                                         imagette_file_name)
         cv2.imwrite(destination_path, img)
 
 
-def preprocess_viruses(split_set: str = 'train', mode: str = "testing"):
+def preprocess_viruses(split_set: str = 'train'):
+
+    #Check if process directories exist, otherwise create them
+    try:
+        os.listdir(PROCESS_DATA_PATH)
+    except FileNotFoundError:
+        print("There is no process directory, creating it for you")
+        os.makedirs(os.path.join(PROCESS_DATA_PATH, split_set))
 
     #Loading structure and data dictionnaries
     particle_dict = get_dic_center()
     pic_dict = get_pic_mesure()
 
     #Subsetting to specific folders if test mode
-    if mode == "testing":
-        test_subset = ['Adenovirus']
-        print(f'Executing in test mode for {test_subset}')
-        particle_dict = {k: particle_dict.get(k) for k in test_subset}
-        pic_dict = {k: pic_dict.get(k) for k in test_subset}
+    print(f'Executing in test mode for {VIRUSES}')
+    particle_dict = {k: particle_dict.get(k) for k in VIRUSES}
+    pic_dict = {k: pic_dict.get(k) for k in VIRUSES}
 
     vcount = 0
     for virus, files in particle_dict.items():
@@ -184,11 +190,18 @@ def preprocess_viruses(split_set: str = 'train', mode: str = "testing"):
             print(
                 f"-------Preprocessing image file {image_count} of {len(files)} 🎆"
             )
+
             #Load the image
             image_path = os.path.join(RAW_DATA_PATH, split_set, virus,
                                       f'{file}.tif')
-            img = np.expand_dims(
-                cv2.imread(image_path, -1).astype(np.float32), 2)
+
+            img = cv2.imread(image_path, -1).astype(np.float32)
+
+            if len(img.shape) == 2:
+                img = np.expand_dims(
+                    cv2.imread(image_path, -1).astype(np.float32), 2)
+            elif len(img.shape) > 2:
+                img = np.expand_dims(img[:, :, 1], 2)
 
             #Resize the image
             img = resize_image(img, file, pic_dict[virus])
@@ -198,11 +211,13 @@ def preprocess_viruses(split_set: str = 'train', mode: str = "testing"):
                                                  pic_dict[virus])
 
             #Min-max scale the image
-            img = cv2.normalize(img, None, 1.0, 0.0, cv2.NORM_MINMAX)
+            img = (cv2.normalize(img, None, 1.0, 0.0, cv2.NORM_MINMAX) *
+                   255).astype(np.uint8)
 
             #Add padding to the image
             img = cv2.copyMakeBorder(img, IMAGE_SIZE, IMAGE_SIZE, IMAGE_SIZE,
                                      IMAGE_SIZE, cv2.BORDER_REFLECT)
+
             img = np.expand_dims(img,
                                  2)  #reshape to (H, W, 1) for tensforflow :)
 
@@ -210,8 +225,8 @@ def preprocess_viruses(split_set: str = 'train', mode: str = "testing"):
             imagettes = make_imagettes(img, resized_particles)
 
             #Create the files
-            save_imagettes(imagettes, split_set, virus, file)
+            save_imagettes(imagettes, split_set, virus, file, "png")
 
 
 if __name__ == "__main__":
-    preprocess_viruses("train", "testing")
+    preprocess_viruses(sys.argv[1])
