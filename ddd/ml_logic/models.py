@@ -256,7 +256,7 @@ def initialize_DenseNet_model():
 
 
 
-def train_DenseNet_model(X_train, X_val):
+def train_DenseNet_model(data_train, data_val):
     """
      Train the DN201 model with the given data
         Parameters:
@@ -267,15 +267,15 @@ def train_DenseNet_model(X_train, X_val):
     """
 
     # Transform the images from grayscale to RGB in order to have 3 channels for the DN201
-    X_train = X_train.map(lambda x,y : (tf.image.grayscale_to_rgb(x),y))
-    X_val = X_val.map(lambda x,y : (tf.image.grayscale_to_rgb(x),y))
+    data_train = data_train.map(lambda x,y : (tf.image.grayscale_to_rgb(x),y))
+    data_val = data_val.map(lambda x,y : (tf.image.grayscale_to_rgb(x),y))
 
 
     model = initialize_DenseNet_model()
     es = EarlyStopping(patience=5, verbose=1)
 
-    history = model.fit(X_train,
-                    validation_data=X_val,
+    history = model.fit(data_train,
+                    validation_data=data_val,
                     batch_size=32,
                     epochs=30,
                     verbose=1,
