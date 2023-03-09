@@ -17,6 +17,10 @@ MODEL_METHODS = {
     'vgg19': {
         'init': VGG19_model,
         'train': train_VGG19_model_fromdataset
+    },
+    'cnn': {
+        'init': initialize_CNN_model,
+        'train': train_CNN_model
     }
 }
 
@@ -70,19 +74,19 @@ def get_dataset():
 
 
 @mlflow_run
-def train_model():
+def train_model(choice_model: str = 'custom'):
 
     #get all datasets
     train, val, test = get_dataset()
 
-    model = MODEL_METHODS.get(CHOICE_MODEL).get('init')()
+    model = MODEL_METHODS.get(choice_model).get('init')()
 
-    model, history = MODEL_METHODS.get(CHOICE_MODEL).get('train')(model, train,
+    model, history = MODEL_METHODS.get(choice_model).get('train')(model, train,
                                                                   val)
 
     val_accuracy = np.min(history.history.get('val_accuracy'))
 
-    params = {'model_type': CHOICE_MODEL}
+    params = {'model_type': choice_model}
 
     save_result(params=params, metrics=dict(acc=val_accuracy))
     save_model(model)
