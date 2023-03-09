@@ -19,3 +19,6 @@ __pycache__
 ## Other useless stuff
 *.egg-info
 .vscode
+
+## We don't want to save parameters in git
+training_outputs
