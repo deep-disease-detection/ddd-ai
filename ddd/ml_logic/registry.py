@@ -42,7 +42,7 @@ def save_model(model: keras.Model = None) -> None:
 
     if MODEL_TARGET == 'mlflow':
         mlflow.tensorflow.log_model(model=model,
-                                    artifact_path= ,
+                                    artifact_path='model',
                                     registerd_model_name=MLFLOW_MODEL_NAME)
         print("✅ Model saved to mlflow")
 

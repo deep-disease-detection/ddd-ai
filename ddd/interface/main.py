@@ -1,6 +1,7 @@
 from ddd.params import *
 from ddd.ml_logic.models import *
 import os
+from ddd.ml_logic.registry import mlflow_run
 
 MODEL_METHODS = {
     'custom': {
@@ -18,7 +19,7 @@ MODEL_METHODS = {
 }
 
 
-def get_dataset():
+def get_dataset(sample=False):
     '''
     Return processed train, validation and test dataset from directory
     '''
@@ -26,7 +27,17 @@ def get_dataset():
     from tensorflow.keras.utils import image_dataset_from_directory
 
     print("Getting train dataset :)")
-    train = image_dataset_from_directory(AUGTRAIN_PATH,
+    #pour prendre un sample de train dataset
+    if sample==True:
+        train = image_dataset_from_directory(SAMPLE_PATH,
+                                         labels='inferred',
+                                         label_mode='categorical',
+                                         shuffle=True,
+                                         seed=42,
+                                         color_mode="grayscale",
+                                         batch_size=BATCH_SIZE)
+    else:
+        train = image_dataset_from_directory(AUGTRAIN_PATH,
                                          labels='inferred',
                                          label_mode='categorical',
                                          shuffle=True,
@@ -56,10 +67,12 @@ def get_dataset():
     return train, validation, test
 
 
+
+@mlflow_run
 def train_model():
 
     #get all datasets
-    train, val, test = get_dataset()
+    train, val, test = get_dataset(TEST)
 
     model = MODEL_METHODS.get(CHOICE_MODEL).get('init')()
 

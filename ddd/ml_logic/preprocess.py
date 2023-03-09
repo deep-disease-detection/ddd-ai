@@ -453,3 +453,24 @@ def augment_pictures():
                              os.path.join(AUGTRAIN_PATH, virus, file_name))
 
                 file_name_list.pop(index)
+
+
+
+
+
+def make_sample():
+    '''faire un petit dataset pour les test'''
+
+    for virus in os.listdir(AUGTRAIN_PATH):
+        if virus in os.listdir(SAMPLE_PATH):
+            pass
+        else:
+            print(f"Creating directory for {virus}")
+            print(SAMPLE_PATH)
+            os.mkdir(os.path.join(SAMPLE_PATH, virus))
+        for i in range(10):
+            virus_path = os.path.join(AUGTRAIN_PATH, virus)
+            file_name = os.listdir(virus_path)[i]
+
+            copyfile(os.path.join(virus_path, file_name),
+                             os.path.join(SAMPLE_PATH, virus, file_name))

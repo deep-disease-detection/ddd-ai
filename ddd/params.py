@@ -2,7 +2,7 @@ import os
 
 IMAGE_SIZE = 256
 MODEL_TARGET = os.environ.get('MODEL_TARGET')
-
+TEST = os.environ.get('TEST')
 
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
 GCS_DATA_BUCKET = os.environ.get("GCS_DATA_BUCKET")
@@ -15,6 +15,7 @@ AUGTRAIN_PATH = os.environ.get("AUGTRAIN_PATH")
 TRAIN_PATH = os.path.join(PROCESS_DATA_PATH, 'train')
 VALIDATION_PATH = os.path.join(PROCESS_DATA_PATH, 'validation')
 TEST_PATH = os.path.join(PROCESS_DATA_PATH, 'test')
+SAMPLE_PATH = os.environ.get("SAMPLE_PATH")
 
 VIRUSES = [
     'Adenovirus', 'Astrovirus', 'CCHF', 'Cowpox', 'Ebola', 'Influenza',
@@ -35,9 +36,8 @@ MLFLOW_MODEL_NAME = os.environ.get("MLFLOW_MODEL_NAME")
 #MODELING
 METRICS = ['accuracy', 'recall', 'precision', 'f1']
 
-BATCH_SIZE = 32
+BATCH_SIZE = 1
 EPOCHS = 1
 PATIENCE = 5
 
 CHOICE_MODEL = 'dense'
-
