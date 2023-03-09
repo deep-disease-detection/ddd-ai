@@ -21,3 +21,10 @@ VIRUSES = [
 ]
 
 IMAGES_PER_VIRUS = 736  #target number of imagettes for augmentation
+
+#MODELING
+METRICS = ['accuracy', 'recall', 'precision', 'f1']
+
+BATCH_SIZE = 32
+EPOCHS = 1
+PATIENCE = 5

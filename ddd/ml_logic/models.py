@@ -12,7 +12,8 @@ import tensorflow as tf
 from keras.applications.vgg19 import VGG19
 from keras.applications.densenet import DenseNet201
 
-reg_kernel = l2(0.01)
+#ddd package
+from ddd.params import *
 
 
 def initialize_custom_model():
@@ -25,6 +26,8 @@ def initialize_custom_model():
     '''
     # imput layer
     inputs = Input((256, 256, 1), name='input')
+
+    reg_kernel = l2(0.01)
 
     # first batch of convolutions
     convolution_1 = Conv2D(64, (3, 3),
@@ -146,7 +149,7 @@ def train_custom_model(X_train: np.ndarray, y_train: np.ndarray,
 
 
 def train_custom_model_fromdataset(model, train: tf.data.Dataset,
-                                   val: tf.data.Dataset, **kwargs):
+                                   val: tf.data.Dataset):
     '''
     Train the custom model with the given data
         Parameters:
@@ -159,12 +162,12 @@ def train_custom_model_fromdataset(model, train: tf.data.Dataset,
             history (keras.callbacks.History): training history
 
     '''
-    es = EarlyStopping(patience=kwargs.get("patience", 5), verbose=2)
+    es = EarlyStopping(patience=PATIENCE, verbose=2)
 
     history = model.fit(train,
                         validation_data=val,
                         callbacks=[es],
-                        epochs=kwargs.get('epochs', 30),
+                        epochs=EPOCHS,
                         verbose=1)
 
     return model, history
@@ -236,7 +239,7 @@ def train_VGG19_model(X_train: np.ndarray, y_train: np.ndarray,
 
 
 def train_VGG19_model_fromdataset(model, train: tf.data.Dataset,
-                                  val: tf.data.Dataset, **kwargs):
+                                  val: tf.data.Dataset):
     '''
     Train the VGG19 model with the given data
         Parameters:
@@ -252,12 +255,12 @@ def train_VGG19_model_fromdataset(model, train: tf.data.Dataset,
     train = train.map(lambda x, y: (tf.image.grayscale_to_rgb(x), y))
     val = val.map(lambda x, y: (tf.image.grayscale_to_rgb(x), y))
 
-    es = EarlyStopping(patience=kwargs.get("patience", 5), verbose=2)
+    es = EarlyStopping(patience=PATIENCE, verbose=2)
 
     history = model.fit(train,
                         validation_data=val,
                         callbacks=[es],
-                        epochs=30,
+                        epochs=EPOCHS,
                         verbose=1)
 
     return model, history
@@ -299,7 +302,7 @@ def initialize_DenseNet_model():
     return model
 
 
-def train_DenseNet_model_fromdataset(model, data_train, data_val, **kwargs):
+def train_DenseNet_model_fromdataset(model, data_train, data_val):
     """
      Train the DN201 model with the given data
         Parameters:
@@ -313,11 +316,11 @@ def train_DenseNet_model_fromdataset(model, data_train, data_val, **kwargs):
     data_train = data_train.map(lambda x, y: (tf.image.grayscale_to_rgb(x), y))
     data_val = data_val.map(lambda x, y: (tf.image.grayscale_to_rgb(x), y))
 
-    es = EarlyStopping(patience=5, verbose=1)
+    es = EarlyStopping(patience=PATIENCE, verbose=1)
 
     history = model.fit(data_train,
                         validation_data=data_val,
-                        epochs=kwargs.get('epochs', 30),
+                        epochs=EPOCHS,
                         verbose=1,
                         callbacks=[es])
 
