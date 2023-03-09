@@ -56,14 +56,14 @@ def get_dataset():
     return train, validation, test
 
 
-def train_model(model_choice: str):
+def train_model():
 
     #get all datasets
     train, val, test = get_dataset()
 
-    model = MODEL_METHODS.get(model_choice).get('init')()
+    model = MODEL_METHODS.get(CHOICE_MODEL).get('init')()
 
-    model, history = MODEL_METHODS.get(model_choice).get('train')(model, train,
+    model, history = MODEL_METHODS.get(CHOICE_MODEL).get('train')(model, train,
                                                                   val)
 
     print(f'Finished training the model')
