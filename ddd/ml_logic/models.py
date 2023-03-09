@@ -12,7 +12,6 @@ import tensorflow as tf
 from keras.applications.vgg19 import VGG19
 from keras.applications.densenet import DenseNet201
 
-
 reg_kernel = l2(0.01)
 
 
@@ -146,7 +145,32 @@ def train_custom_model(X_train: np.ndarray, y_train: np.ndarray,
     return model, history
 
 
-def VVG19_model():
+def train_custom_model_fromdataset(model, train: tf.data.Dataset,
+                                   val: tf.data.Dataset, **kwargs):
+    '''
+    Train the custom model with the given data
+        Parameters:
+            X_train (np.ndarray): training data
+            y_train (np.ndarray): training labels
+            X_validation (np.ndarray): validation data
+            y_validation (np.ndarray): validation labels
+        Returns:
+            model (keras.models.Model): trained model
+            history (keras.callbacks.History): training history
+
+    '''
+    es = EarlyStopping(patience=kwargs.get("patience", 5), verbose=2)
+
+    history = model.fit(train,
+                        validation_data=val,
+                        callbacks=[es],
+                        epochs=kwargs.get('epochs', 30),
+                        verbose=1)
+
+    return model, history
+
+
+def VGG19_model():
     '''
     Create the VGG19 model
         Parameters:
@@ -196,7 +220,7 @@ def train_VGG19_model(X_train: np.ndarray, y_train: np.ndarray,
             history (keras.callbacks.History): training history
 
     '''
-    model = VVG19_model()
+    model = VGG19_model()
 
     es = EarlyStopping(patience=5, verbose=2)
 
@@ -211,7 +235,32 @@ def train_VGG19_model(X_train: np.ndarray, y_train: np.ndarray,
     return model, history
 
 
+def train_VGG19_model_fromdataset(model, train: tf.data.Dataset,
+                                  val: tf.data.Dataset, **kwargs):
+    '''
+    Train the VGG19 model with the given data
+        Parameters:
+            X_train (np.ndarray): training data
+            y_train (np.ndarray): training labels
+            X_validation (np.ndarray): validation data
+            y_validation (np.ndarray): validation labels
+        Returns:
+            model (keras.models.Model): trfained model
+            history (keras.callbacks.History): training history
 
+    '''
+    train = train.map(lambda x, y: (tf.image.grayscale_to_rgb(x), y))
+    val = val.map(lambda x, y: (tf.image.grayscale_to_rgb(x), y))
+
+    es = EarlyStopping(patience=kwargs.get("patience", 5), verbose=2)
+
+    history = model.fit(train,
+                        validation_data=val,
+                        callbacks=[es],
+                        epochs=30,
+                        verbose=1)
+
+    return model, history
 
 
 def initialize_DenseNet_model():
@@ -223,7 +272,9 @@ def initialize_DenseNet_model():
             model (keras.models.Model): DenseNet 201 model
 
     """
-    base_model = DenseNet201(weights="imagenet", include_top=False, input_shape=(256,256,3))
+    base_model = DenseNet201(weights="imagenet",
+                             include_top=False,
+                             input_shape=(256, 256, 3))
 
     # Set the first layers to be untrainable
     base_model.trainable = False
@@ -237,15 +288,9 @@ def initialize_DenseNet_model():
     prediction_layer = Dense(14, activation='softmax')
 
     model = Sequential([
-            base_model,
-            add_layer,
-            drop_1,
-            add_layer2,
-            drop_2,
-            flatten_layer,
-            dense_layer,
-            prediction_layer
-        ])
+        base_model, add_layer, drop_1, add_layer2, drop_2, flatten_layer,
+        dense_layer, prediction_layer
+    ])
 
     model.compile(loss='categorical_crossentropy',
                   optimizer="adam",
@@ -254,9 +299,7 @@ def initialize_DenseNet_model():
     return model
 
 
-
-
-def train_DenseNet_model(data_train, data_val):
+def train_DenseNet_model_fromdataset(model, data_train, data_val, **kwargs):
     """
      Train the DN201 model with the given data
         Parameters:
@@ -267,18 +310,15 @@ def train_DenseNet_model(data_train, data_val):
     """
 
     # Transform the images from grayscale to RGB in order to have 3 channels for the DN201
-    data_train = data_train.map(lambda x,y : (tf.image.grayscale_to_rgb(x),y))
-    data_val = data_val.map(lambda x,y : (tf.image.grayscale_to_rgb(x),y))
+    data_train = data_train.map(lambda x, y: (tf.image.grayscale_to_rgb(x), y))
+    data_val = data_val.map(lambda x, y: (tf.image.grayscale_to_rgb(x), y))
 
-
-    model = initialize_DenseNet_model()
     es = EarlyStopping(patience=5, verbose=1)
 
     history = model.fit(data_train,
-                    validation_data=data_val,
-                    batch_size=32,
-                    epochs=30,
-                    verbose=1,
-                    callbacks=[es])
+                        validation_data=data_val,
+                        epochs=kwargs.get('epochs', 30),
+                        verbose=1,
+                        callbacks=[es])
 
     return model, history
