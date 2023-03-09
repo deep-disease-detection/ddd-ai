@@ -32,10 +32,8 @@ MLFLOW_EXPERIMENT = os.environ.get("MLFLOW_EXPERIMENT")
 MLFLOW_MODEL_NAME = os.environ.get("MLFLOW_MODEL_NAME")
 
 #MODELING
-METRICS = ['accuracy', 'recall', 'precision', 'f1']
+METRICS = ['accuracy']
 
 BATCH_SIZE = 32
-EPOCHS = 1
-PATIENCE = 5
-
-CHOICE_MODEL = 'custom'
+EPOCHS = 2
+PATIENCE = 2
