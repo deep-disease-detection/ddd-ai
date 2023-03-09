@@ -2,7 +2,7 @@ from google.cloud import storage
 from ddd.params import *
 import os
 
-def get_dataset():
+def get_dataset(**kwargs):
     '''
     Return processed train, validation and test dataset from directory
     '''
@@ -14,7 +14,10 @@ def get_dataset():
         AUGTRAIN_PATH,
         labels='inferred',
         label_mode='categorical',
-        image_size=IMAGE_SIZE
+        shuffle=True,
+        seed=42,
+        color_mode="grayscale",
+        batch_size= kwargs.get('batch_size', 32)
     )
 
     print('Getting validation dataset :)')
@@ -22,7 +25,10 @@ def get_dataset():
         VALIDATION_PATH,
         labels='inferred',
         label_mode='categorical',
-        image_size= IMAGE_SIZE
+        shuffle=True,
+        seed=42,
+        color_mode="grayscale",
+        batch_size= kwargs.get('batch_size', 32)
     )
 
     print('Getting test dataset :)')
@@ -30,19 +36,11 @@ def get_dataset():
         TEST_PATH,
         labels='inferred',
         label_mode='categorical',
-        image_size= IMAGE_SIZE
+        shuffle=True,
+        seed=42,
+        color_mode="grayscale",
+        batch_size= kwargs.get('batch_size', 32)
     )
 
     print('All done !✅')
     return train, validation, test
-
-
-
-def train_model(nom_model):
-    '''
-    Download processed dataset from local directory
-    Train the model on the processed dataset
-    Store training result
-    '''
-
-    train, val, test = get_dataset()
