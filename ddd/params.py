@@ -30,3 +30,14 @@ LOCAL_REGISTRY_PATH= os.environ.get('LOCAL_REGISTRY_PATH')
 MLFLOW_TRACKING_URI = os.environ.get("MLFLOW_TRACKING_URI")
 MLFLOW_EXPERIMENT = os.environ.get("MLFLOW_EXPERIMENT")
 MLFLOW_MODEL_NAME = os.environ.get("MLFLOW_MODEL_NAME")
+
+
+#MODELING
+METRICS = ['accuracy', 'recall', 'precision', 'f1']
+
+BATCH_SIZE = 32
+EPOCHS = 1
+PATIENCE = 5
+
+CHOICE_MODEL = 'dense'
+
