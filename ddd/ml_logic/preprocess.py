@@ -2,6 +2,7 @@
 import os
 import csv
 import sys
+from itertools import product
 
 # import data processing libraries
 import numpy as np
@@ -290,16 +291,18 @@ def make_imagettes(img: np.array, particles: list) -> list:
     return imagettes
 
 
-def rotate_flip(img_path, nbr_passage:int):
+def rotate_flip(img_path, nbr_passage: int):
 
-    degree = [cv2.ROTATE_90_CLOCKWISE, cv2.ROTATE_180, cv2.ROTATE_90_COUNTERCLOCKWISE]
-    flipping_param = [1,0, -1]
-    combinaison = list(product(degree,flipping_param))
-    print(img_path)
+    degree = [
+        cv2.ROTATE_90_CLOCKWISE, cv2.ROTATE_180, cv2.ROTATE_90_COUNTERCLOCKWISE
+    ]
+    flipping_param = [1, 0, -1]
+    combinaison = list(product(degree, flipping_param))
     img = cv2.imread(img_path)
     new_image = cv2.rotate(img, combinaison[nbr_passage][0])
     new_image = cv2.flip(new_image, combinaison[nbr_passage][1])
     return new_image
+
 
 def save_imagettes(imagettes: list, split_set: str, virus: str, file: str,
                    format: str):
@@ -310,18 +313,18 @@ def save_imagettes(imagettes: list, split_set: str, virus: str, file: str,
         cv2.imwrite(destination_path, img)
 
 
-def preprocess_viruses(split_set: str = 'train'):
+def preprocess_viruses():
 
     #Check if process directories exist, otherwise create them
     try:
-        os.listdir(os.path.join(PROCESS_DATA_PATH, split_set))
+        os.listdir(os.path.join(PROCESS_DATA_PATH, TO_PREPROCESS))
     except FileNotFoundError:
         print("There is no process directory, creating it for you")
-        os.makedirs(os.path.join(PROCESS_DATA_PATH, split_set))
+        os.makedirs(os.path.join(PROCESS_DATA_PATH, TO_PREPROCESS))
 
     #Loading structure and data dictionnaries
-    particle_dict = get_dic_center(split_set)
-    pic_dict = get_pic_mesure(split_set)
+    particle_dict = get_dic_center(TO_PREPROCESS)
+    pic_dict = get_pic_mesure(TO_PREPROCESS)
 
     #Subsetting to specific folders if test mode
     print(f'Executing in test mode for {VIRUSES}')
@@ -335,12 +338,12 @@ def preprocess_viruses(split_set: str = 'train'):
         print(f"Preprocessing virus folder {vcount} of {len(particle_dict)} 🦠")
 
         #Check if directory for processed virus data already exists, otherwise make it
-        if virus in os.listdir(os.path.join(PROCESS_DATA_PATH, split_set)):
+        if virus in os.listdir(os.path.join(PROCESS_DATA_PATH, TO_PREPROCESS)):
             print(f"Skipping over {virus} because it was already processed")
             continue
         else:
             print(f"Creating directory for {virus}")
-            os.mkdir(os.path.join(PROCESS_DATA_PATH, split_set, virus))
+            os.mkdir(os.path.join(PROCESS_DATA_PATH, TO_PREPROCESS, virus))
 
         image_count = 0
         for file, particles in files.items():
@@ -351,7 +354,7 @@ def preprocess_viruses(split_set: str = 'train'):
             )
 
             #Load the image
-            image_path = os.path.join(RAW_DATA_PATH, split_set, virus,
+            image_path = os.path.join(RAW_DATA_PATH, TO_PREPROCESS, virus,
                                       f'{file}.tif')
 
             img = cv2.imread(image_path, -1).astype(np.float32)
@@ -384,60 +387,69 @@ def preprocess_viruses(split_set: str = 'train'):
             imagettes = make_imagettes(img, resized_particles)
 
             #Create the files
-            save_imagettes(imagettes, split_set, virus, file, "png")
+            save_imagettes(imagettes, TO_PREPROCESS, virus, file, "png")
 
 
+def augment_pictures():
 
-def augmented_picture():
-    train_path = 'data/dataset-processed/TEM virus dataset/context_virus_1nm_256x256/train'
-    virus_list = os.listdir(train_path)
-    destination_path = os.path.join('data/dataset-processed/TEM virus dataset/context_virus_1nm_256x256', 'augmented_train')
+    virus_list = os.listdir(TRAIN_PATH)
 
+    print('Starting image augmentation script 🦠')
+
+    #Check if process directories exist, otherwise create them
+    try:
+        os.listdir(AUGTRAIN_PATH)
+    except FileNotFoundError:
+        print("There is no augmented train directory, creating it")
+        os.makedirs(AUGTRAIN_PATH)
 
     for virus in virus_list:
-        source_path = os.path.join(train_path, virus)
-        dest_virus_folder = os.path.join(destination_path, virus)
+        source_path = os.path.join(TRAIN_PATH, virus)
+        dest_virus_folder = os.path.join(AUGTRAIN_PATH, virus)
         file_name_list = os.listdir(source_path)
 
-        if virus in os.listdir(destination_path):
+        if virus in os.listdir(AUGTRAIN_PATH):
             pass
         else:
             print(f"Creating directory for {virus}")
-            os.mkdir(os.path.join(destination_path, virus))
-
+            os.mkdir(os.path.join(AUGTRAIN_PATH, virus))
 
         nbr_of_imagettes = len(os.listdir(source_path))
-        if nbr_of_imagettes < 736:
+        if nbr_of_imagettes < IMAGES_PER_VIRUS:
             # copy paste all images in another directory
             for image in file_name_list:
-                copyfile(os.path.join(source_path, image), os.path.join(dest_virus_folder, image))
+                copyfile(os.path.join(source_path, image),
+                         os.path.join(dest_virus_folder, image))
 
-            #augmentation des images
+            #augment the imagettes
             nbre_passage = 0
-            while len(os.listdir(dest_virus_folder)) < 736:
+            while len(os.listdir(dest_virus_folder)) < IMAGES_PER_VIRUS:
                 for image in file_name_list:
-                    new_image = rotate_flip(os.path.join(source_path,image), nbre_passage)
+                    new_image = rotate_flip(os.path.join(source_path, image),
+                                            nbre_passage)
                     print(f'AUG{nbre_passage}{image}')
                     print(len(os.listdir(dest_virus_folder)))
-                    cv2.imwrite(os.path.join(dest_virus_folder, f'AUG{nbre_passage}{image}'), new_image)
-                    if len(os.listdir(dest_virus_folder)) == 736:
+                    cv2.imwrite(
+                        os.path.join(dest_virus_folder,
+                                     f'AUG_{nbre_passage}_{image}'), new_image)
+                    if len(os.listdir(dest_virus_folder)) == IMAGES_PER_VIRUS:
                         print('done')
                         break
                 nbre_passage = nbre_passage + 1
-                if nbre_passage >=9:
-                    print('not enough picture')
+                if nbre_passage >= 9:
+                    print(
+                        'not enough pictures to reach target imagette number')
 
         else:
-            print(len(file_name_list))
-            # randomly copy 736 images
-            for i in range(736):
-                index = np.random.randint(len(os.path.join(source_path, virus)))
+            # randomly copy images
+            for _ in range(IMAGES_PER_VIRUS):
+                index = np.random.randint(len(file_name_list))
                 file_name = file_name_list[index]
+
                 #pour ne pas faire de doublons
-                if file_name not in os.listdir(os.path.join(destination_path, virus)):
-                    copyfile(os.path.join(source_path, file_name), os.path.join(destination_path, virus, file_name))
+                if file_name not in os.listdir(
+                        os.path.join(AUGTRAIN_PATH, virus)):
+                    copyfile(os.path.join(source_path, file_name),
+                             os.path.join(AUGTRAIN_PATH, virus, file_name))
 
-
-if __name__ == "__main__":
-    #augmented_picture()
-    preprocess_viruses(sys.argv[1])
+                file_name_list.pop(index)
