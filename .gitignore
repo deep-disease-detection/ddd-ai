@@ -22,3 +22,5 @@ __pycache__
 
 ## We don't want to save parameters in git
 training_outputs
+
+mlruns/

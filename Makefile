@@ -19,3 +19,5 @@ create_local_files:
 train_model:
 	@python -c 'from ddd.interface.main import train_model; train_model()'
 
+make_sample:
+	@@python -c 'from ddd.ml_logic.preprocess import make_sample; make_sample()'
