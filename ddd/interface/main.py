@@ -1,7 +1,9 @@
 from ddd.params import *
 from ddd.ml_logic.models import *
+from ddd.ml_logic.registry import save_model, save_result
 import os
 from ddd.ml_logic.registry import mlflow_run
+import numpy as np
 
 MODEL_METHODS = {
     'custom': {
@@ -19,7 +21,7 @@ MODEL_METHODS = {
 }
 
 
-def get_dataset(sample=False):
+def get_dataset():
     '''
     Return processed train, validation and test dataset from directory
     '''
@@ -28,22 +30,22 @@ def get_dataset(sample=False):
 
     print("Getting train dataset :)")
     #pour prendre un sample de train dataset
-    if sample==True:
+    if TEST == "True":
         train = image_dataset_from_directory(SAMPLE_PATH,
-                                         labels='inferred',
-                                         label_mode='categorical',
-                                         shuffle=True,
-                                         seed=42,
-                                         color_mode="grayscale",
-                                         batch_size=BATCH_SIZE)
+                                             labels='inferred',
+                                             label_mode='categorical',
+                                             shuffle=True,
+                                             seed=42,
+                                             color_mode="grayscale",
+                                             batch_size=BATCH_SIZE)
     else:
         train = image_dataset_from_directory(AUGTRAIN_PATH,
-                                         labels='inferred',
-                                         label_mode='categorical',
-                                         shuffle=True,
-                                         seed=42,
-                                         color_mode="grayscale",
-                                         batch_size=BATCH_SIZE)
+                                             labels='inferred',
+                                             label_mode='categorical',
+                                             shuffle=True,
+                                             seed=42,
+                                             color_mode="grayscale",
+                                             batch_size=BATCH_SIZE)
 
     print('Getting validation dataset :)')
     validation = image_dataset_from_directory(VALIDATION_PATH,
@@ -67,18 +69,22 @@ def get_dataset(sample=False):
     return train, validation, test
 
 
-
 @mlflow_run
 def train_model():
 
     #get all datasets
-    train, val, test = get_dataset(TEST)
+    train, val, test = get_dataset()
 
     model = MODEL_METHODS.get(CHOICE_MODEL).get('init')()
 
     model, history = MODEL_METHODS.get(CHOICE_MODEL).get('train')(model, train,
                                                                   val)
 
-    print(f'Finished training the model')
+    val_accuracy = np.min(history.history.get('val_accuracy'))
 
-    pass
+    params = {'model_type': CHOICE_MODEL}
+
+    save_result(params=params, metrics=dict(acc=val_accuracy))
+    save_model(model)
+
+    return val_accuracy
