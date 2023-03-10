@@ -3,7 +3,8 @@ import numpy as np
 
 # import keras classes and functions
 from tensorflow import keras
-from keras.layers import Conv2D, BatchNormalization, MaxPooling2D, Flatten, Dense, Dropout, Input, concatenate
+from keras.metrics import Recall, Accuracy, Precision
+from keras.layers import Conv2D, BatchNormalization, MaxPooling2D, Flatten, Dense, Dropout, Input, concatenate, Lambda
 from keras.regularizers import l2
 from keras.callbacks import EarlyStopping
 from keras.models import Model, Sequential
@@ -115,7 +116,7 @@ def initialize_custom_model():
     # model compilation
     model.compile(loss='categorical_crossentropy',
                   optimizer='adam',
-                  metrics=['accuracy'])
+                  metrics=METRICS)
     return model
 
 
@@ -205,7 +206,7 @@ def VGG19_model():
     # Compile the model with categorical_crossentropy loss function, adam optimizer and accuracy metrics
     model.compile(loss='categorical_crossentropy',
                   optimizer='adam',
-                  metrics=['accuracy'])
+                  metrics=METRICS)
     return model
 
 
@@ -297,7 +298,7 @@ def initialize_DenseNet_model():
 
     model.compile(loss='categorical_crossentropy',
                   optimizer="adam",
-                  metrics=['accuracy'])
+                  metrics=METRICS)
 
     return model
 
@@ -360,3 +361,59 @@ def train_test_model(model, train, val):
                         verbose=1)
 
     return history
+
+
+def initialize_CNN_model():
+    regl2 = l2(.01)
+
+    model = Sequential([
+        Lambda(lambda x: x / 255, input_shape=(256, 256, 1)),
+        Conv2D(8,
+               kernel_size=(5, 5),
+               activation='relu',
+               padding="same",
+               kernel_regularizer=regl2),
+        MaxPooling2D(pool_size=2),
+        Conv2D(16,
+               kernel_size=(4, 4),
+               activation='relu',
+               padding="same",
+               kernel_regularizer=regl2),
+        MaxPooling2D(pool_size=2),
+        Conv2D(32,
+               kernel_size=(3, 3),
+               activation='relu',
+               padding="same",
+               kernel_regularizer=regl2),
+        MaxPooling2D(pool_size=2),
+        Conv2D(64,
+               kernel_size=(2, 2),
+               activation='relu',
+               padding="same",
+               kernel_regularizer=regl2),
+        MaxPooling2D(pool_size=2),
+        Flatten(),
+        Dense(1000, activation='relu', kernel_regularizer=regl2),
+        Dropout(.2),
+        Dense(14, activation='softmax')
+    ])
+
+    model.compile(optimizer="adam",
+                  loss='categorical_crossentropy',
+                  metrics=['accuracy', Recall(),
+                           Precision()])
+
+    return model
+
+
+def train_CNN_model(model, train, val):
+
+    es = EarlyStopping(patience=PATIENCE, verbose=1)
+
+    history = model.fit(train,
+                        validation_data=val,
+                        epochs=EPOCHS,
+                        verbose=1,
+                        callbacks=[es])
+
+    return model, history

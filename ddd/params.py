@@ -11,10 +11,11 @@ RAW_DATA_PATH = os.environ.get("RAW_DATA_PATH")
 PROCESS_DATA_PATH = os.environ.get("PROCESS_DATA_PATH")
 TO_PREPROCESS = os.environ.get("TO_PREPROCESS")
 
+AUGMENTED = os.environ.get("AUGMENTED")
 AUGTRAIN_PATH = os.environ.get("AUGTRAIN_PATH")
-TRAIN_PATH = os.path.join(PROCESS_DATA_PATH, 'train')
-VALIDATION_PATH = os.path.join(PROCESS_DATA_PATH, 'validation')
-TEST_PATH = os.path.join(PROCESS_DATA_PATH, 'test')
+TRAIN_PATH = os.environ.get("TRAIN_PATH")
+VALIDATION_PATH = os.environ.get("VALIDATION_PATH")
+TEST_PATH = os.environ.get("TEST_PATH")
 SAMPLE_PATH = os.environ.get("SAMPLE_PATH")
 
 VIRUSES = [
@@ -32,10 +33,10 @@ MLFLOW_EXPERIMENT = os.environ.get("MLFLOW_EXPERIMENT")
 MLFLOW_MODEL_NAME = os.environ.get("MLFLOW_MODEL_NAME")
 
 #MODELING
-METRICS = ['accuracy', 'recall', 'precision', 'f1']
 
 BATCH_SIZE = 32
-EPOCHS = 1
-PATIENCE = 5
 
-CHOICE_MODEL = 'test'
+
+CHOICE_MODEL = 'cnn'
+EPOCHS = 100
+PATIENCE = 10
