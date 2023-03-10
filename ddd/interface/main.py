@@ -74,6 +74,12 @@ def get_dataset():
                                         color_mode="grayscale",
                                         batch_size=BATCH_SIZE)
 
+    print('Normalizing data...')
+
+    train.map(lambda x, y: (tf.cast(x / 255, tf.float32), y))
+    validation.map(lambda x, y: (tf.cast(x / 255, tf.float32), y))
+    test.map(lambda x, y: (tf.cast(x / 255, tf.float32), y))
+
     print('All done !✅')
     return train, validation, test
 
@@ -84,14 +90,14 @@ def train_model(choice_model: str = 'custom'):
     #get all datasets
     train, val, test = get_dataset()
 
-    model = MODEL_METHODS.get(CHOICE_MODEL).get('init')()
+    model = MODEL_METHODS.get(choice_model).get('init')()
 
-    model, history = MODEL_METHODS.get(CHOICE_MODEL).get('train')(model, train,
+    model, history = MODEL_METHODS.get(choice_model).get('train')(model, train,
                                                                   val)
 
     val_accuracy = np.min(history.history.get('val_accuracy'))
 
-    params = {'model_type': CHOICE_MODEL}
+    params = {'model_type': choice_model}
 
     save_result(params=params, metrics=dict(acc=val_accuracy))
     save_model(model)
