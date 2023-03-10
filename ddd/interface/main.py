@@ -43,13 +43,22 @@ def get_dataset():
                                              color_mode="grayscale",
                                              batch_size=BATCH_SIZE)
     else:
-        train = image_dataset_from_directory(AUGTRAIN_PATH,
-                                             labels='inferred',
-                                             label_mode='categorical',
-                                             shuffle=True,
-                                             seed=42,
-                                             color_mode="grayscale",
-                                             batch_size=BATCH_SIZE)
+        if AUGMENTED == "True":
+            train = image_dataset_from_directory(AUGTRAIN_PATH,
+                                                 labels='inferred',
+                                                 label_mode='categorical',
+                                                 shuffle=True,
+                                                 seed=42,
+                                                 color_mode="grayscale",
+                                                 batch_size=BATCH_SIZE)
+        else:
+            train = image_dataset_from_directory(TRAIN_PATH,
+                                                 labels='inferred',
+                                                 label_mode='categorical',
+                                                 shuffle=True,
+                                                 seed=42,
+                                                 color_mode="grayscale",
+                                                 batch_size=BATCH_SIZE)
 
     print('Getting validation dataset :)')
     validation = image_dataset_from_directory(VALIDATION_PATH,
@@ -74,7 +83,7 @@ def get_dataset():
 
 
 @mlflow_run
-def train_model(choice_model: str = 'custom'):
+def train_model(choice_model: str = 'cnn'):
 
     #get all datasets
     train, val, test = get_dataset()
@@ -84,11 +93,16 @@ def train_model(choice_model: str = 'custom'):
     model, history = MODEL_METHODS.get(choice_model).get('train')(model, train,
                                                                   val)
 
-    val_accuracy = np.min(history.history.get('val_accuracy'))
+    params = {'model_type': choice_model, 'augmentation': AUGMENTED}
 
-    params = {'model_type': choice_model}
+    metrics = {
+        'history': history,
+        'val_accuracy': np.max(history.history.get('val_accuracy')),
+        'val_precision': np.max(history.history.get('val_precision')),
+        'val_recall': np.max(history.history.get('val_recall'))
+    }
 
-    save_result(params=params, metrics=dict(acc=val_accuracy))
+    save_result(params=params, metrics=metrics)
     save_model(model)
 
-    return val_accuracy
+    pass
