@@ -76,9 +76,9 @@ def get_dataset():
 
     print('Normalizing data...')
 
-    train.map(lambda x, y: (tf.cast(x / 255, tf.float32), y))
-    validation.map(lambda x, y: (tf.cast(x / 255, tf.float32), y))
-    test.map(lambda x, y: (tf.cast(x / 255, tf.float32), y))
+    train = train.map(lambda x, y: (tf.cast(x / 255, tf.float32), y))
+    validation = validation.map(lambda x, y: (tf.cast(x / 255, tf.float32), y))
+    test = test.map(lambda x, y: (tf.cast(x / 255, tf.float32), y))
 
     print('All done !✅')
     return train, validation, test
