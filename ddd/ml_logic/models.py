@@ -173,7 +173,7 @@ def train_custom_model(X_train: np.ndarray, y_train: np.ndarray,
     es = EarlyStopping(patience=5, verbose=2)
     cs = CSVLogger(os.path.join(LOCAL_REGISTRY_PATH, 'logs',
                                 f'custom_logs_{timestamp}.csv'),
-                   append=True)
+                   append=False)
 
     history = model.fit(X_train,
                         y_train,
@@ -205,7 +205,7 @@ def train_custom_model_fromdataset(model, train: tf.data.Dataset,
     es = EarlyStopping(patience=5, verbose=2)
     cs = CSVLogger(os.path.join(LOCAL_REGISTRY_PATH, 'logs',
                                 f'custom_logs_{timestamp}.csv'),
-                   append=True)
+                   append=False)
 
     history = model.fit(train,
                         validation_data=val,
@@ -307,7 +307,7 @@ def train_VGG19_model_fromdataset(model, train: tf.data.Dataset,
     es = EarlyStopping(patience=PATIENCE, verbose=1)
     cs = CSVLogger(os.path.join(LOCAL_REGISTRY_PATH, 'logs',
                                 f'vgg19_logs_{timestamp}.csv'),
-                   append=True)
+                   append=False)
 
     history = model.fit(train,
                         validation_data=val,
@@ -376,7 +376,7 @@ def train_DenseNet_model_fromdataset(model, data_train, data_val):
     es = EarlyStopping(patience=PATIENCE, verbose=1)
     cs = CSVLogger(os.path.join(LOCAL_REGISTRY_PATH, 'logs',
                                 f'densenet_logs_{timestamp}.csv'),
-                   append=True)
+                   append=False)
 
     history = model.fit(data_train,
                         validation_data=data_val,

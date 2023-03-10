@@ -99,6 +99,8 @@ def train_model(choice_model: str = 'custom'):
 
     model = MODEL_METHODS.get(choice_model).get('init')()
 
+    #Create csv file for logging
+
     model, history = MODEL_METHODS.get(choice_model).get('train')(model, train,
                                                                   val)
 
