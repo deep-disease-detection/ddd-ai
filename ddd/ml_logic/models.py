@@ -116,7 +116,8 @@ def initialize_custom_model():
     # model compilation
     model.compile(loss='categorical_crossentropy',
                   optimizer='adam',
-                  metrics=METRICS)
+                  metrics=['accuracy', Recall(),
+                           Precision()])
     return model
 
 
@@ -206,7 +207,8 @@ def VGG19_model():
     # Compile the model with categorical_crossentropy loss function, adam optimizer and accuracy metrics
     model.compile(loss='categorical_crossentropy',
                   optimizer='adam',
-                  metrics=METRICS)
+                  metrics=['accuracy', Recall(),
+                           Precision()])
     return model
 
 
@@ -298,7 +300,8 @@ def initialize_DenseNet_model():
 
     model.compile(loss='categorical_crossentropy',
                   optimizer="adam",
-                  metrics=METRICS)
+                  metrics=['accuracy', Recall(),
+                           Precision()])
 
     return model
 
