@@ -4,6 +4,11 @@ from ddd.ml_logic.registry import save_model, save_result
 import os
 from ddd.ml_logic.registry import mlflow_run
 import numpy as np
+from ddd.ml_logic.registry import load_model
+from tensorflow.keras import Model
+from ddd.ml_logic.preprocess import convert_b64_to_tf
+import cv2
+import base64
 
 MODEL_METHODS = {
     'custom': {
@@ -17,6 +22,10 @@ MODEL_METHODS = {
     'vgg19': {
         'init': VGG19_model,
         'train': train_VGG19_model_fromdataset
+    },
+    'test':{
+        'init': test_model,
+        'train': train_test_model
     }
 }
 
@@ -69,7 +78,7 @@ def get_dataset():
     return train, validation, test
 
 
-@mlflow_run
+# @mlflow_run
 def train_model():
 
     #get all datasets
@@ -88,3 +97,54 @@ def train_model():
     save_model(model)
 
     return val_accuracy
+
+
+
+def evaluate_model() -> float:
+    """
+    Evaluate the performance of the latest production model on processed data
+    Return ...
+    """
+    train, val, test = get_dataset()
+    model = load_model()
+    assert model is not None
+
+    metrics_dict = model.evaluate(
+        test,
+        batch_size = BATCH_SIZE,
+        verbose= 0,
+        return_dict = True
+    )
+
+    loss = metrics_dict['loss']
+    accuracy = metrics_dict['accuracy']
+
+    params = dict(
+        context='evaluate'
+    )
+
+    print("The model loss is ", loss)
+    print("The model accuracy is ", accuracy)
+
+    save_result(params=params, metrics=metrics_dict)
+    return accuracy
+
+
+
+def predict(image:tf):
+
+    model = load_model()
+    assert model is not None
+    image = np.expand_dims(image, axis=0)
+    print(image.shape)
+    y_pred = model.predict(image)
+    print(y_pred.argmax())
+    return y_pred
+
+
+if __name__ == '__main__':
+    image = cv2.imread('data/process/TEM virus dataset/context_virus_1nm_256x256/augmented_train/Adenovirus/A4-65k-071120_2_0.png')
+    image2 = cv2.imencode('.png',image)[1]
+    b64 =base64.b64encode(image2)
+    X = convert_b64_to_tf(b64)
+    predict(X)

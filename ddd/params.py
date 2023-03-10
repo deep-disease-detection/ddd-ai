@@ -38,4 +38,4 @@ BATCH_SIZE = 32
 EPOCHS = 1
 PATIENCE = 5
 
-CHOICE_MODEL = 'custom'
+CHOICE_MODEL = 'test'
