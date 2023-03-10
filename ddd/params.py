@@ -11,8 +11,9 @@ RAW_DATA_PATH = os.environ.get("RAW_DATA_PATH")
 PROCESS_DATA_PATH = os.environ.get("PROCESS_DATA_PATH")
 TO_PREPROCESS = os.environ.get("TO_PREPROCESS")
 
+AUGMENTED = os.environ.get("AUGMENTED")
 AUGTRAIN_PATH = os.environ.get("AUGTRAIN_PATH")
-TRAIN_PATH = os.path.join(PROCESS_DATA_PATH, 'train')
+TRAIN_PATH = os.environ.get("TRAIN_PATH")
 VALIDATION_PATH = os.path.join(PROCESS_DATA_PATH, 'validation')
 TEST_PATH = os.path.join(PROCESS_DATA_PATH, 'test')
 SAMPLE_PATH = os.environ.get("SAMPLE_PATH")
@@ -32,8 +33,7 @@ MLFLOW_EXPERIMENT = os.environ.get("MLFLOW_EXPERIMENT")
 MLFLOW_MODEL_NAME = os.environ.get("MLFLOW_MODEL_NAME")
 
 #MODELING
-METRICS = ['accuracy']
 
 BATCH_SIZE = 32
-EPOCHS = 2
-PATIENCE = 2
+EPOCHS = 100
+PATIENCE = 10
