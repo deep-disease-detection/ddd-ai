@@ -14,8 +14,8 @@ TO_PREPROCESS = os.environ.get("TO_PREPROCESS")
 AUGMENTED = os.environ.get("AUGMENTED")
 AUGTRAIN_PATH = os.environ.get("AUGTRAIN_PATH")
 TRAIN_PATH = os.environ.get("TRAIN_PATH")
-VALIDATION_PATH = os.path.join(PROCESS_DATA_PATH, 'validation')
-TEST_PATH = os.path.join(PROCESS_DATA_PATH, 'test')
+VALIDATION_PATH = os.environ.get("VALIDATION_PATH")
+TEST_PATH = os.environ.get("TEST_PATH")
 SAMPLE_PATH = os.environ.get("SAMPLE_PATH")
 
 VIRUSES = [

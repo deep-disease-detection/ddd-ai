@@ -83,7 +83,7 @@ def get_dataset():
 
 
 @mlflow_run
-def train_model(choice_model: str = 'cnn'):
+def train_model(choice_model: str = 'custom'):
 
     #get all datasets
     train, val, test = get_dataset()
