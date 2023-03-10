@@ -23,7 +23,7 @@ MODEL_METHODS = {
         'init': VGG19_model,
         'train': train_VGG19_model_fromdataset
     },
-    'test':{
+    'test': {
         'init': test_model,
         'train': train_test_model
     }
@@ -78,8 +78,9 @@ def get_dataset():
     return train, validation, test
 
 
-# @mlflow_run
-def train_model():
+
+@mlflow_run
+def train_model(choice_model: str = 'custom'):
 
     #get all datasets
     train, val, test = get_dataset()
@@ -96,8 +97,7 @@ def train_model():
     save_result(params=params, metrics=dict(acc=val_accuracy))
     save_model(model)
 
-    return val_accuracy
-
+    return metrics.get("val_accuracy")
 
 
 def evaluate_model() -> float:
@@ -109,19 +109,15 @@ def evaluate_model() -> float:
     model = load_model()
     assert model is not None
 
-    metrics_dict = model.evaluate(
-        test,
-        batch_size = BATCH_SIZE,
-        verbose= 0,
-        return_dict = True
-    )
+    metrics_dict = model.evaluate(test,
+                                  batch_size=BATCH_SIZE,
+                                  verbose=0,
+                                  return_dict=True)
 
     loss = metrics_dict['loss']
     accuracy = metrics_dict['accuracy']
 
-    params = dict(
-        context='evaluate'
-    )
+    params = dict(context='evaluate')
 
     print("The model loss is ", loss)
     print("The model accuracy is ", accuracy)
@@ -130,8 +126,7 @@ def evaluate_model() -> float:
     return accuracy
 
 
-
-def predict(image:tf):
+def predict(image: tf):
 
     model = load_model()
     assert model is not None
@@ -146,8 +141,10 @@ def predict(image:tf):
 
 
 if __name__ == '__main__':
-    image = cv2.imread('data/process/TEM virus dataset/context_virus_1nm_256x256/augmented_train/Adenovirus/A4-65k-071120_2_0.png')
-    image2 = cv2.imencode('.png',image)[1]
-    b64 =base64.b64encode(image2)
+    image = cv2.imread(
+        'data/dataset-processed/TEM virus dataset/context_virus_1nm_256x256/augmented_train/Adenovirus/A4-65k-071120_2_0.png'
+    )
+    image2 = cv2.imencode('.png', image)[1]
+    b64 = base64.b64encode(image2)
     X = convert_b64_to_tf(b64)
     predict(X)
