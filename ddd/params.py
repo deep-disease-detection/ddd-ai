@@ -54,3 +54,6 @@ CLASS_NAME=['Adenovirus',
  'Papilloma',
  'Rift Valley',
  'Rotavirus']
+
+
+BUCKET_NAME = os.environ.get('BUCKET_NAME')

@@ -31,6 +31,25 @@ def save_result(params: dict, metrics: dict) -> None:
 
     print("✅ Results saved locally")
 
+    if MODEL_TARGET == 'gcs':
+
+        from google.cloud import storage
+
+        params_file_name = params_path.split("/")[-1] # e.g. "20230208-161047.h5" for instance
+        client = storage.Client()
+        bucket = client.bucket(BUCKET_NAME)
+        blob = bucket.blob(f"{LOCAL_REGISTRY_PATH}/params/{params_file_name}")
+
+        blob.upload_from_filename(params_file_name)
+
+        metrics_file_name = metrics_path.split("/")[-1]
+        blob = bucket.blob(f"{LOCAL_REGISTRY_PATH}/metrics/{metrics_file_name}")
+
+        blob.upload_from_filename(metrics_file_name)
+
+        print("✅ Results saved to gcs")
+        return None
+
 
 def save_model(model: keras.Model = None) -> None:
 
@@ -49,6 +68,21 @@ def save_model(model: keras.Model = None) -> None:
         print("✅ Model saved to mlflow")
 
         return None
+
+    if MODEL_TARGET == 'gcs':
+
+        from google.cloud import storage
+
+        model_filename = model_path.split("/")[-1] # e.g. "20230208-161047.h5" for instance
+        client = storage.Client()
+        bucket = client.bucket(BUCKET_NAME)
+        blob = bucket.blob(f"{LOCAL_REGISTRY_PATH}/models/{model_filename}")
+
+        blob.upload_from_filename(model_path)
+
+        print("✅ Model saved to gcs")
+        return None
+
 
     return None
 
@@ -97,3 +131,12 @@ def mlflow_run(func):
         return results
 
     return wrapper
+
+
+
+if __name__ == '__main__':
+    model = load_model()
+    params = {'hey': 'yo'}
+    metrics = {'metric':'youhou'}
+    save_model(model=model)
+    save_result(params=params, metrics=metrics)
