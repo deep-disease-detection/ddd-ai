@@ -119,7 +119,7 @@ def train_model(choice_model: str = 'custom'):
     return metrics.get("val_accuracy")
 
 
-def evaluate_model() -> float:
+def evaluate_model(choice_model) -> float:
     """
     Evaluate the performance of the latest production model on processed data
     Return ...
@@ -127,6 +127,9 @@ def evaluate_model() -> float:
     train, val, test = get_dataset()
     model = load_model()
     assert model is not None
+
+    if choice_model in ["dense", "vgg19"]:
+        test = test.map(lambda x, y: (tf.image.grayscale_to_rgb(x), y))
 
     metrics_dict = model.evaluate(test,
                                   batch_size=BATCH_SIZE,
