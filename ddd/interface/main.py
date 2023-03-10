@@ -78,7 +78,6 @@ def get_dataset():
     return train, validation, test
 
 
-
 @mlflow_run
 def train_model(choice_model: str = 'custom'):
 
@@ -118,7 +117,7 @@ def evaluate_model(choice_model) -> float:
                                   return_dict=True)
 
     loss = metrics_dict['loss']
-    accuracy = metrics_dict['accuracy']
+    accuracy = metrics_dict['categorical_accuracy']
 
     params = dict(context='evaluate')
 
@@ -133,7 +132,7 @@ def predict(image: tf):
 
     model = load_model()
     assert model is not None
-    image = np.expand_dims(image, axis=0)    #pour avoir le bon format
+    image = np.expand_dims(image, axis=0)  #pour avoir le bon format
     y_pred = model.predict(image)
     max = y_pred.argmax()
     label = CLASS_NAME[max]
