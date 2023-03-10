@@ -328,6 +328,41 @@ def train_DenseNet_model_fromdataset(model, data_train, data_val):
     return model, history
 
 
+
+def test_model():
+    """petit model tout nul pour les test"""
+
+    model = Sequential()
+    model.add(Conv2D(32, (5, 5),
+                    padding='same',
+                    strides = (1,1),
+                    input_shape=(256, 256, 1),
+                    activation='relu'))
+
+    model.add(Flatten())
+    model.add(Dense(6, activation='relu'))
+    model.add(Dense(14, activation='softmax'))
+
+    model.compile(loss='categorical_crossentropy',
+                  optimizer='adam',
+                  metrics=['accuracy'])
+    return model
+
+
+def train_test_model(model, train, val):
+    """entrainer le model tout nul """
+
+    es = EarlyStopping(patience=PATIENCE, verbose=2)
+
+    history = model.fit(train,
+                        validation_data=val,
+                        callbacks=[es],
+                        epochs=EPOCHS,
+                        verbose=1)
+
+    return history
+
+
 def initialize_CNN_model():
     regl2 = l2(.01)
 

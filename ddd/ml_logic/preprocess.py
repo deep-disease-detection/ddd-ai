@@ -20,6 +20,11 @@ from keras.utils import to_categorical
 import tensorflow as tf
 from shutil import copyfile
 
+#pour la fonction convert base64
+from imageio import imread
+import base64
+import io
+
 # define global variables
 path = "../data/TEM virus dataset/context_virus_1nm_256x256"
 train_path = "augmented_train"
@@ -474,3 +479,15 @@ def make_sample():
 
             copyfile(os.path.join(virus_path, file_name),
                              os.path.join(SAMPLE_PATH, virus, file_name))
+
+
+
+
+
+def convert_b64_to_tf(b64code):
+    '''convert the base64 code of the image to a tensorflow shape (256,256, 1)'''
+    b = base64.b64decode(b64code.decode('utf-8'))
+    im = imread(io.BytesIO(b))
+    im2 = im[:,:,1]
+    im2 = np.expand_dims(im2, axis=2)
+    return tf.constant(im2)
