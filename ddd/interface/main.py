@@ -26,10 +26,6 @@ MODEL_METHODS = {
     'test':{
         'init': test_model,
         'train': train_test_model
-    },
-    'cnn': {
-        'init': initialize_CNN_model,
-        'train': train_CNN_model
     }
 }
 
@@ -52,22 +48,13 @@ def get_dataset():
                                              color_mode="grayscale",
                                              batch_size=BATCH_SIZE)
     else:
-        if AUGMENTED == "True":
-            train = image_dataset_from_directory(AUGTRAIN_PATH,
-                                                 labels='inferred',
-                                                 label_mode='categorical',
-                                                 shuffle=True,
-                                                 seed=42,
-                                                 color_mode="grayscale",
-                                                 batch_size=BATCH_SIZE)
-        else:
-            train = image_dataset_from_directory(TRAIN_PATH,
-                                                 labels='inferred',
-                                                 label_mode='categorical',
-                                                 shuffle=True,
-                                                 seed=42,
-                                                 color_mode="grayscale",
-                                                 batch_size=BATCH_SIZE)
+        train = image_dataset_from_directory(AUGTRAIN_PATH,
+                                             labels='inferred',
+                                             label_mode='categorical',
+                                             shuffle=True,
+                                             seed=42,
+                                             color_mode="grayscale",
+                                             batch_size=BATCH_SIZE)
 
     print('Getting validation dataset :)')
     validation = image_dataset_from_directory(VALIDATION_PATH,
@@ -91,28 +78,22 @@ def get_dataset():
     return train, validation, test
 
 
-
-@mlflow_run
-def train_model(choice_model: str = 'custom'):
+# @mlflow_run
+def train_model():
 
     #get all datasets
     train, val, test = get_dataset()
 
-    model = MODEL_METHODS.get(choice_model).get('init')()
+    model = MODEL_METHODS.get(CHOICE_MODEL).get('init')()
 
-    model, history = MODEL_METHODS.get(choice_model).get('train')(model, train,
+    model, history = MODEL_METHODS.get(CHOICE_MODEL).get('train')(model, train,
                                                                   val)
 
-    params = {'model_type': choice_model, 'augmentation': AUGMENTED}
+    val_accuracy = np.min(history.history.get('val_accuracy'))
 
-    metrics = {
-        'history': history,
-        'val_accuracy': np.max(history.history.get('val_accuracy')),
-        'val_precision': np.max(history.history.get('val_precision')),
-        'val_recall': np.max(history.history.get('val_recall'))
-    }
+    params = {'model_type': CHOICE_MODEL}
 
-    save_result(params=params, metrics=metrics)
+    save_result(params=params, metrics=dict(acc=val_accuracy))
     save_model(model)
 
     return val_accuracy
@@ -154,11 +135,14 @@ def predict(image:tf):
 
     model = load_model()
     assert model is not None
-    image = np.expand_dims(image, axis=0)
-    print(image.shape)
+    image = np.expand_dims(image, axis=0)    #pour avoir le bon format
     y_pred = model.predict(image)
-    print(y_pred.argmax())
-    return y_pred
+    max = y_pred.argmax()
+    label = CLASS_NAME[max]
+    print(label)
+    print(y_pred[0][max])
+    proba = y_pred[0][max]
+    return label, proba
 
 
 if __name__ == '__main__':
@@ -167,4 +151,3 @@ if __name__ == '__main__':
     b64 =base64.b64encode(image2)
     X = convert_b64_to_tf(b64)
     predict(X)
-

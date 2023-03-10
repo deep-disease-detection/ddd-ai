@@ -40,3 +40,20 @@ BATCH_SIZE = 32
 CHOICE_MODEL = 'cnn'
 EPOCHS = 100
 PATIENCE = 10
+
+
+
+CLASS_NAME=['Adenovirus',
+ 'Astrovirus',
+ 'CCHF',
+ 'Cowpox',
+ 'Ebola',
+ 'Influenza',
+ 'Lassa',
+ 'Marburg',
+ 'Nipah virus',
+ 'Norovirus',
+ 'Orf',
+ 'Papilloma',
+ 'Rift Valley',
+ 'Rotavirus']

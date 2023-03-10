@@ -14,3 +14,10 @@ imageio
 
 
 colorama
+
+#API
+fastapi
+uvicorn
+httpx
+pytest-asyncio
+pydantic
