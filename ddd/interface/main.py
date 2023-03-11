@@ -23,6 +23,10 @@ MODEL_METHODS = {
         'init': VGG19_model,
         'train': train_VGG19_model_fromdataset
     },
+    'cnn': {
+        'init': initialize_CNN_model,
+        'train': train_CNN_model
+    },
     'test': {
         'init': test_model,
         'train': train_test_model
@@ -74,9 +78,14 @@ def get_dataset():
                                         color_mode="grayscale",
                                         batch_size=BATCH_SIZE)
 
+    print('Normalizing data...')
+
+    train = train.map(lambda x, y: (tf.cast(x / 255, tf.float32), y))
+    validation = validation.map(lambda x, y: (tf.cast(x / 255, tf.float32), y))
+    test = test.map(lambda x, y: (tf.cast(x / 255, tf.float32), y))
+
     print('All done !✅')
     return train, validation, test
-
 
 
 @mlflow_run
@@ -85,16 +94,27 @@ def train_model(choice_model: str = 'custom'):
     #get all datasets
     train, val, test = get_dataset()
 
-    model = MODEL_METHODS.get(CHOICE_MODEL).get('init')()
+    model = MODEL_METHODS.get(choice_model).get('init')()
 
-    model, history = MODEL_METHODS.get(CHOICE_MODEL).get('train')(model, train,
+    model, history = MODEL_METHODS.get(choice_model).get('train')(model, train,
                                                                   val)
 
-    val_accuracy = np.min(history.history.get('val_accuracy'))
+    val_accuracy = np.max(history.history.get('val_categorical_accuracy'))
 
-    params = {'model_type': CHOICE_MODEL}
+    metrics = {
+        'history': history,
+        'val_accuracy': val_accuracy,
+    }
 
-    save_result(params=params, metrics=dict(acc=val_accuracy))
+    params = {
+        'model_type': choice_model,
+        'context': 'train',
+        'epochs': EPOCHS,
+        'batch_size': BATCH_SIZE,
+        'augmentation': AUGMENTED
+    }
+
+    save_result(params=params, metrics=metrics)
     save_model(model)
 
     return metrics.get("val_accuracy")
@@ -118,7 +138,7 @@ def evaluate_model(choice_model) -> float:
                                   return_dict=True)
 
     loss = metrics_dict['loss']
-    accuracy = metrics_dict['accuracy']
+    accuracy = metrics_dict['categorical_accuracy']
 
     params = dict(context='evaluate')
 
@@ -129,14 +149,18 @@ def evaluate_model(choice_model) -> float:
     return accuracy
 
 
-def predict(image: tf):
+def predict(image: np.array):
 
     model = load_model()
     assert model is not None
-    image = np.expand_dims(image, axis=0)    #pour avoir le bon format
+    image = np.expand_dims(image, axis=0)  #pour avoir le bon format
+
+    #Normalizing the image
+    image = (image / 255).astype(np.float32)
+
     y_pred = model.predict(image)
     max = y_pred.argmax()
-    label = CLASS_NAME[max]
+    label = VIRUSES[max]
     print(label)
     print(y_pred[0][max])
     proba = y_pred[0][max]

@@ -15,6 +15,7 @@ create_local_files:
 	@mkdir training_outputs/metrics
 	@mkdir training_outputs/models
 	@mkdir training_outputs/params
+	@mkdir training_outputs/logs
 
 train_model:
 	@python -c 'from ddd.interface.main import train_model; train_model()'

@@ -15,16 +15,16 @@ print('model ready')
 
 @app.get('/')
 def root():
-    return {'youhou':'hourra'}
+    return {'youhou': 'hourra'}
 
 
 @app.get('/predict/')
 def root():
-    return {'youhou':'hourra'}
+    return {'youhou': 'hourra'}
 
 
 class Item(BaseModel):
-    image:str
+    image: str
 
 
 @app.post('/predict/')
@@ -40,15 +40,12 @@ def predict(post_dict: Item):
 
     assert app.state.model is not None
 
-    image = np.expand_dims(image, axis=0)    #pour avoir le bon format
+    image = np.expand_dims(image, axis=0)  #pour avoir le bon format
     y_pred = app.state.model.predict(image)
     #récupérer le label avec le plus de probabilité
     max = y_pred.argmax()
-    label = CLASS_NAME[max]
+    label = VIRUSES[max]
     print(label)
     print(y_pred[0][max])
     proba = y_pred[0][max]
-    return {
-        'Virus': str(label),
-        'Proba = ': round(float(proba),2)
-    }
+    return {'Virus': str(label), 'Proba = ': round(float(proba), 2)}
