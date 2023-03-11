@@ -95,11 +95,22 @@ def train_model(choice_model: str = 'custom'):
     model, history = MODEL_METHODS.get(choice_model).get('train')(model, train,
                                                                   val)
 
-    val_accuracy = np.min(history.history.get('val_accuracy'))
+    val_accuracy = np.max(history.history.get('val_categorical_accuracy'))
 
-    params = {'model_type': choice_model}
+    metrics = {
+        'history': history,
+        'val_accuracy': val_accuracy,
+    }
 
-    save_result(params=params, metrics=dict(acc=val_accuracy))
+    params = {
+        'model_type': choice_model,
+        'context': 'train',
+        'epochs': EPOCHS,
+        'batch_size': BATCH_SIZE,
+        'augmentation': AUGMENTED
+    }
+
+    save_result(params=params, metrics=metrics)
     save_model(model)
 
     return metrics.get("val_accuracy")
@@ -134,11 +145,15 @@ def evaluate_model(choice_model) -> float:
     return accuracy
 
 
-def predict(image: tf):
+def predict(image: np.array):
 
     model = load_model()
     assert model is not None
     image = np.expand_dims(image, axis=0)  #pour avoir le bon format
+
+    #Normalizing the image
+    image = (image / 255).astype(np.float32)
+
     y_pred = model.predict(image)
     max = y_pred.argmax()
     label = CLASS_NAME[max]
