@@ -95,17 +95,36 @@ def load_model(stage='Production') -> keras.Model:
     print(Fore.BLUE + f"\nLoad latest model from local registry..." + Style.RESET_ALL)
 
     # Get latest model version name by timestamp on disk
-    local_model_directory = os.path.join(LOCAL_REGISTRY_PATH, "models")
-    local_model_paths = glob.glob(f"{local_model_directory}/*")
-    if not local_model_paths:
-        return None
+    if MODEL_TARGET == 'local':
+        local_model_directory = os.path.join(LOCAL_REGISTRY_PATH, "models")
+        local_model_paths = glob.glob(f"{local_model_directory}/*")
+        if not local_model_paths:
+            return None
 
-    most_recent_model_path_on_disk = sorted(local_model_paths)[-1]
-    print(Fore.BLUE + f"\nLoad latest model from disk..." + Style.RESET_ALL)
-    lastest_model = keras.models.load_model(most_recent_model_path_on_disk)
-    print("✅ model loaded from local disk")
+        most_recent_model_path_on_disk = sorted(local_model_paths)[-1]
+        print(Fore.BLUE + f"\nLoad latest model from disk..." + Style.RESET_ALL)
+        lastest_model = keras.models.load_model(most_recent_model_path_on_disk)
+        print("✅ model loaded from local disk")
+        return latest_model
 
-    #faire pour mlflow si il faut
+    elif MODEL_TARGET == 'gcs':
+
+        from google.cloud import storage
+        client = storage.Client()
+        blobs = list(client.get_bucket(BUCKET_NAME).list_blobs(prefix='training_outputs/models'))
+        try:
+            latest_blob = max(blobs, key=lambda x: x.updated)
+            name_latest_blob = latest_blob.name.replace('training_outputs/models/', '')
+            latest_model_path_to_save = os.path.join(LOCAL_REGISTRY_PATH, 'models',  name_latest_blob)
+            print(name_latest_blob)
+
+            latest_blob.download_to_filename(latest_model_path_to_save)
+            latest_model = keras.models.load_model(latest_model_path_to_save)
+            print("✅ Latest model downloaded from cloud storage")
+            return latest_model
+        except:
+            print(f"\n❌ No model found on GCS bucket {BUCKET_NAME}")
+            return None
 
     return lastest_model
 
@@ -135,8 +154,10 @@ def mlflow_run(func):
 
 
 if __name__ == '__main__':
+    # model = load_model()
+    # params = {'hey': 'yo'}
+    # metrics = {'metric':'youhou'}
+    # save_model(model=model)
+    # save_result(params=params, metrics=metrics)
     model = load_model()
-    params = {'hey': 'yo'}
-    metrics = {'metric':'youhou'}
-    save_model(model=model)
-    save_result(params=params, metrics=metrics)
+    assert model is not None
