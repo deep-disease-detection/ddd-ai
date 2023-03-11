@@ -78,11 +78,49 @@ def get_dataset():
                                         color_mode="grayscale",
                                         batch_size=BATCH_SIZE)
 
-    print('Normalizing data...')
+    print('Min maxing data...')
 
     train = train.map(lambda x, y: (tf.cast(x / 255, tf.float32), y))
     validation = validation.map(lambda x, y: (tf.cast(x / 255, tf.float32), y))
     test = test.map(lambda x, y: (tf.cast(x / 255, tf.float32), y))
+
+    print('Normalizing data...')
+    mean = np.zeros((256, 256, 1))
+    total = 0
+
+    for i in train.as_numpy_iterator():
+        total += i[0].shape[0]
+        mean += np.sum(i[0], axis=0)
+
+    mean = mean / total
+
+    var = np.zeros((256, 256, 1))
+    total = 0
+
+    for i in train.as_numpy_iterator():
+        var_mean = np.repeat(np.expand_dims(mean, axis=0),
+                             i[0].shape[0],
+                             axis=0)
+        var += np.sum((i[0] - var_mean)**2, axis=0)
+        total += i[0].shape[0]
+
+    std = np.sqrt(var / total)
+
+    train = train.map(lambda x, y: ((x - mean) / std, y))
+    validation = validation.map(lambda x, y: ((x - mean) / std, y))
+    test = test.map(lambda x, y: ((x - mean) / std, y))
+
+    print('Saving mean and std for predict')
+
+    mean_path = os.path.join(LOCAL_REGISTRY_PATH, "state", "mean.pickle")
+
+    std_path = os.path.join(LOCAL_REGISTRY_PATH, "state", "std.pickle")
+
+    with open(mean_path, "wb") as file:
+        np.save(file, mean)
+
+    with open(std_path, "wb") as file:
+        np.save(file, std)
 
     print('All done !✅')
     return train, validation, test
@@ -132,10 +170,7 @@ def evaluate_model(choice_model) -> float:
     if choice_model in ["dense", "vgg19"]:
         test = test.map(lambda x, y: (tf.image.grayscale_to_rgb(x), y))
 
-    metrics_dict = model.evaluate(test,
-                                  batch_size=BATCH_SIZE,
-                                  verbose=0,
-                                  return_dict=True)
+    metrics_dict = model.evaluate(test, verbose=0, return_dict=True)
 
     loss = metrics_dict['loss']
     accuracy = metrics_dict['categorical_accuracy']
@@ -157,6 +192,8 @@ def predict(image: np.array):
 
     #Normalizing the image
     image = (image / 255).astype(np.float32)
+
+    #WIP - Need to standardize as well using
 
     y_pred = model.predict(image)
     max = y_pred.argmax()
