@@ -23,6 +23,10 @@ MODEL_METHODS = {
         'init': VGG19_model,
         'train': train_VGG19_model_fromdataset
     },
+    'cnn': {
+        'init': initialize_CNN_model,
+        'train': train_CNN_model
+    },
     'test': {
         'init': test_model,
         'train': train_test_model
@@ -156,7 +160,7 @@ def predict(image: np.array):
 
     y_pred = model.predict(image)
     max = y_pred.argmax()
-    label = CLASS_NAME[max]
+    label = VIRUSES[max]
     print(label)
     print(y_pred[0][max])
     proba = y_pred[0][max]
