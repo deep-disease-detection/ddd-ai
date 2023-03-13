@@ -18,11 +18,73 @@ VALIDATION_PATH = os.environ.get("VALIDATION_PATH")
 TEST_PATH = os.environ.get("TEST_PATH")
 SAMPLE_PATH = os.environ.get("SAMPLE_PATH")
 
+#YOLO
+YOLO_DATA_PATH = os.environ.get("YOLO_DATA_PATH")
+YOLO_IMAGE_SIZE = 1000
+
 VIRUSES = [
     'Adenovirus', 'Astrovirus', 'CCHF', 'Cowpox', 'Ebola', 'Influenza',
     'Lassa', 'Marburg', 'Nipah virus', 'Norovirus', 'Orf', 'Papilloma',
     'Rift Valley', 'Rotavirus'
 ]
+
+VIRUS_METADATA = {
+    'Adenovirus': {
+        'id': 0,
+        'elongated': False,
+        'diameter': 80
+    },
+    'Astrovirus': {
+        'id': 1,
+        'elongated': False,
+        'diameter': 25
+    },
+    'CCHF': {
+        'id': 2,
+        'elongated': False,
+        'diameter': 150
+    },
+    'Cowpox': {
+        'id': 2,
+        'elongated': False,
+        'diameter': 350
+    },
+    'Ebola': {
+        'id': 3,
+        'elongated': True,
+        'diameter': 80
+    },
+    'Marburg': {
+        'id': 4,
+        'elongated': True,
+        'diameter': 80
+    },
+    'Norovirus': {
+        'id': 5,
+        'elongated': False,
+        'diameter': 30
+    },
+    'Orf': {
+        'id': 6,
+        'elongated': False,
+        'diameter': 320
+    },
+    'Papilloma': {
+        'id': 7,
+        'elongated': False,
+        'diameter': 55
+    },
+    'Rift Valley': {
+        'id': 8,
+        'elongated': False,
+        'diameter': 90
+    },
+    'Rotavirus': {
+        'id': 9,
+        'elongated': False,
+        'diameter': 80
+    }
+}
 
 IMAGES_PER_VIRUS = 736  #target number of imagettes for augmentation
 

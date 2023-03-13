@@ -460,9 +460,6 @@ def augment_pictures():
                 file_name_list.pop(index)
 
 
-
-
-
 def make_sample():
     '''faire un petit dataset pour les test'''
 
@@ -478,16 +475,239 @@ def make_sample():
             file_name = os.listdir(virus_path)[i]
 
             copyfile(os.path.join(virus_path, file_name),
-                             os.path.join(SAMPLE_PATH, virus, file_name))
-
-
-
+                     os.path.join(SAMPLE_PATH, virus, file_name))
 
 
 def convert_b64_to_tf(b64code):
     '''convert the base64 code of the image to a tensorflow shape (256,256, 1)'''
     b = base64.b64decode(b64code.decode('utf-8'))
     im = imread(io.BytesIO(b))
-    im2 = im[:,:,1]
+    im2 = im[:, :, 1]
     im2 = np.expand_dims(im2, axis=2)
     return tf.constant(im2)
+
+
+def get_dic_center_yolo(split_set: str = 'train'):
+    '''
+        Create a dictionary with all coordinates center for each virus and each file
+    '''
+    #dictionary initiation
+    train_data_dic = {}
+    list_virus = [
+        v for v in os.listdir(os.path.join(RAW_DATA_PATH, split_set))
+        if v[0] != '.'
+    ]
+
+    #filling the dictinary virus by virus
+    for virus in list_virus:
+        train_data_dic[virus] = {}
+        path_position_file = os.path.join(RAW_DATA_PATH, split_set, virus,
+                                          'particle_positions')
+
+        #getting all anotation files
+        list_position_file = [
+            f for f in os.listdir(path_position_file) if f[0] != '.'
+        ]
+        #looping over each annotation file
+        for file in list_position_file:
+            with open(
+                    os.path.join(RAW_DATA_PATH, split_set, virus,
+                                 'particle_positions', file), 'r') as f:
+                lines = f.readlines()
+                particles = []
+                particle = []
+                for i in range(3, len(lines)):
+                    if lines[i] != 'particleposition\n':
+                        coordinate = tuple(
+                            float(c) for c in lines[i].strip('\n').split(';'))
+                        particle.append(coordinate)
+
+                        #handle last particle of file
+                        if i == len(lines) - 1 and len(particle) == 2:
+                            particles.append(
+                                [average_coord(particle[0], particle[1])])
+                        elif i == len(lines) - 1:
+                            particles.append(particle)
+                    else:
+                        #compute the center between 2 center point of one single particle
+                        if len(particle) == 2:
+                            particles.append(
+                                [average_coord(particle[0], particle[1])])
+                            particle = []
+                        else:
+                            particles.append(particle)
+                            particle = []
+                file_name = file.replace('_particlepositions.txt', '')
+                train_data_dic[virus][file_name] = particles
+
+    return train_data_dic
+
+
+def resize_particles_yolo(particles: list, file: str, pic_dict: dict):
+    return [[(c[0] * pic_dict[file]['Yscale'], c[1] * pic_dict[file]['Xscale'])
+             for c in particle] for particle in particles]
+
+
+def check_box_in_pic(x, y, w, h):
+    return x - w / 2 >= 0 and x + w / 2 <= YOLO_IMAGE_SIZE and y - h / 2 >= 0 and y + h / 2 <= YOLO_IMAGE_SIZE
+
+
+def preprocess_yolo(split_set: str = 'train'):
+
+    particle_dict = get_dic_center_yolo(split_set)
+    pic_dict = get_pic_mesure(split_set)
+
+    for virus in VIRUS_METADATA.keys():
+
+        print(f"Preparing {virus} for YOLOv7 🦠")
+
+        image_file_count = len(pic_dict.get(virus))
+        for i, image_file_name in enumerate(pic_dict.get(virus)):
+
+            print(f"--------- Processing image {i+1}/{image_file_count} 🎞️")
+
+            image_path = os.path.join(RAW_DATA_PATH, split_set, virus,
+                                      f'{image_file_name}.tif')
+
+            img = cv2.imread(image_path, -1).astype(np.float32)
+
+            #handle images that have 3 channels
+            if len(img.shape) == 2:
+                img = np.expand_dims(
+                    cv2.imread(image_path, -1).astype(np.float32), 2)
+            elif len(img.shape) > 2:
+                img = np.expand_dims(img[:, :, 1], 2)
+
+            #get particles
+            particles = particle_dict.get(virus).get(image_file_name)
+
+            #resize image and particles
+            img = resize_image(img, image_file_name, pic_dict.get(virus))
+            r_particles = resize_particles_yolo(particles, image_file_name,
+                                                pic_dict.get(virus))
+
+            #crop images to 1000x1000 pixels
+            x_coordinates = []
+            y_coordinates = []
+            for particle in r_particles:
+                x_coordinates += [p[0] for p in particle]
+                y_coordinates += [p[1] for p in particle]
+
+            #compute mean of all particles
+            central_particle = (int(np.mean(x_coordinates)),
+                                int(np.mean(y_coordinates)))
+
+            #compute the margin we need to pad if necessary
+            top = central_particle[1] + YOLO_IMAGE_SIZE / 2
+            bottom = central_particle[1] - YOLO_IMAGE_SIZE / 2
+            right = central_particle[0] + YOLO_IMAGE_SIZE / 2
+            left = central_particle[0] - YOLO_IMAGE_SIZE / 2
+
+            border_top = int(max(top - img.shape[1], 0))
+            border_bottom = int(abs(min(bottom, 0)))
+            border_right = int(max(right - img.shape[0], 0))
+            border_left = int(abs(min(left, 0)))
+
+            #pad if necessary
+            crop_img = cv2.copyMakeBorder(img,
+                                          border_bottom,
+                                          border_top,
+                                          border_left,
+                                          border_right,
+                                          borderType=cv2.BORDER_CONSTANT)
+
+            #crop
+            crop_img = crop_img[int(bottom + border_bottom):int(top +
+                                                                border_bottom),
+                                int(left + border_left):int(right +
+                                                            border_left), ]
+
+            #adapt particle positions to crop
+            final_particles = [[(p[0] - left, p[1] - bottom) for p in particle]
+                               for particle in r_particles]
+
+            #make the bounding boxes
+            image_labels = []
+
+            for f_particle in final_particles:
+                #pick a color for the particle
+
+                #if there is only one coordinate, we make a box using virus metadata
+                if len(f_particle) == 1:
+
+                    #if only 1 coordinate set and elongated, simply skip
+                    if VIRUS_METADATA.get(virus).get("elongated"):
+                        continue
+
+                    yolo_x = f_particle[0][0]
+                    yolo_y = f_particle[0][1]
+                    yolo_w = VIRUS_METADATA.get(virus)['diameter']
+                    yolo_h = VIRUS_METADATA.get(virus)['diameter']
+
+                    if not check_box_in_pic(yolo_x, yolo_y, yolo_w, yolo_h):
+                        continue
+
+                    #Normalize x,y, w and h
+                    yolo_x = yolo_x / YOLO_IMAGE_SIZE
+                    yolo_y = yolo_y / YOLO_IMAGE_SIZE
+                    yolo_h = yolo_h / YOLO_IMAGE_SIZE
+                    yolo_w = yolo_w / YOLO_IMAGE_SIZE
+
+                    image_labels.append(
+                        f'{VIRUS_METADATA.get(virus).get("id")} {yolo_x} {yolo_y} {yolo_w} {yolo_h} \n'
+                    )
+
+                else:
+                    x_coordinates = [p[0] for p in f_particle]
+                    y_coordinates = [p[1] for p in f_particle]
+
+                    margin = VIRUS_METADATA.get(virus)['diameter']
+                    min_x = min(x_coordinates) - margin
+                    max_x = max(x_coordinates) + margin
+                    min_y = min(y_coordinates) - margin
+                    max_y = max(y_coordinates) + margin
+                    xy = (min_x, min_y)
+                    w = max_x - min_x
+                    h = max_y - min_y
+
+                    yolo_x = xy[0] + w / 2
+                    yolo_y = xy[1] + h / 2
+                    yolo_w = w
+                    yolo_h = h
+
+                    if not check_box_in_pic(yolo_x, yolo_y, yolo_w, yolo_h):
+                        continue
+
+                    #Normalize x,y, w and h
+                    yolo_x = yolo_x / YOLO_IMAGE_SIZE
+                    yolo_y = yolo_y / YOLO_IMAGE_SIZE
+                    yolo_h = yolo_h / YOLO_IMAGE_SIZE
+                    yolo_w = yolo_w / YOLO_IMAGE_SIZE
+
+                    image_labels.append(
+                        f'{VIRUS_METADATA.get(virus).get("id")} {yolo_x} {yolo_y} {yolo_w} {yolo_h} \n'
+                    )
+
+            #if at least one particle makes it, save the image and the file
+            if (len(image_labels) > 0):
+                crop_img = (
+                    cv2.normalize(crop_img, None, 1.0, 0.0, cv2.NORM_MINMAX) *
+                    255).astype(np.uint8)
+
+                #save the cropped image
+                if split_set == "validation":
+                    split_set_save = "valid"
+                else:
+                    split_set_save = split_set
+
+                saved_image_path = os.path.join(
+                    YOLO_DATA_PATH, 'images', split_set_save,
+                    f'{virus}_{image_file_name}.jpg')
+                cv2.imwrite(saved_image_path, crop_img)
+
+                #save the label file
+                with open(
+                        os.path.join(YOLO_DATA_PATH, 'labels', split_set_save,
+                                     f'{virus}_{image_file_name}.txt'),
+                        "w") as f:
+                    f.writelines(image_labels)
