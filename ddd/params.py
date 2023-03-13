@@ -45,42 +45,42 @@ VIRUS_METADATA = {
         'diameter': 150
     },
     'Cowpox': {
-        'id': 2,
+        'id': 3,
         'elongated': False,
         'diameter': 350
     },
     'Ebola': {
-        'id': 3,
-        'elongated': True,
-        'diameter': 80
-    },
-    'Marburg': {
         'id': 4,
         'elongated': True,
         'diameter': 80
     },
-    'Norovirus': {
+    'Marburg': {
         'id': 5,
+        'elongated': True,
+        'diameter': 80
+    },
+    'Norovirus': {
+        'id': 6,
         'elongated': False,
         'diameter': 30
     },
     'Orf': {
-        'id': 6,
+        'id': 7,
         'elongated': False,
         'diameter': 320
     },
     'Papilloma': {
-        'id': 7,
+        'id': 8,
         'elongated': False,
         'diameter': 55
     },
     'Rift Valley': {
-        'id': 8,
+        'id': 9,
         'elongated': False,
         'diameter': 90
     },
     'Rotavirus': {
-        'id': 9,
+        'id': 10,
         'elongated': False,
         'diameter': 80
     }
