@@ -106,7 +106,7 @@ def load_model(stage='Production') -> keras.Model:
 
         most_recent_model_path_on_disk = sorted(local_model_paths)[-1]
         print(Fore.BLUE + f"\nLoad latest model from disk..." + Style.RESET_ALL)
-        lastest_model = keras.models.load_model(most_recent_model_path_on_disk)
+        latest_model = keras.models.load_model(most_recent_model_path_on_disk)
         print("✅ model loaded from local disk")
         return latest_model
 
@@ -162,4 +162,3 @@ if __name__ == '__main__':
     # save_model(model=model)
     # save_result(params=params, metrics=metrics)
     model = load_model()
-
