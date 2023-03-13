@@ -603,9 +603,9 @@ def preprocess_yolo(split_set: str = 'train'):
             right = central_particle[0] + YOLO_IMAGE_SIZE / 2
             left = central_particle[0] - YOLO_IMAGE_SIZE / 2
 
-            border_top = int(max(top - img.shape[1], 0))
+            border_top = int(max(top - img.shape[0], 0))
             border_bottom = int(abs(min(bottom, 0)))
-            border_right = int(max(right - img.shape[0], 0))
+            border_right = int(max(right - img.shape[1], 0))
             border_left = int(abs(min(left, 0)))
 
             #pad if necessary
@@ -620,7 +620,7 @@ def preprocess_yolo(split_set: str = 'train'):
             crop_img = crop_img[int(bottom + border_bottom):int(top +
                                                                 border_bottom),
                                 int(left + border_left):int(right +
-                                                            border_left), ]
+                                                            border_left)]
 
             #adapt particle positions to crop
             final_particles = [[(p[0] - left, p[1] - bottom) for p in particle]
