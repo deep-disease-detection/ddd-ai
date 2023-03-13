@@ -18,9 +18,9 @@ def root():
     return {'youhou': 'hourra'}
 
 
-@app.get('/predict/')
-def root():
-    return {'youhou': 'hourra'}
+# @app.get('/predict/')
+# def root():
+#     return {'youhou': 'hourra'}
 
 
 class Item(BaseModel):
