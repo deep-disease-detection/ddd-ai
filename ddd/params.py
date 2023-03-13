@@ -20,7 +20,7 @@ SAMPLE_PATH = os.environ.get("SAMPLE_PATH")
 
 #YOLO
 YOLO_DATA_PATH = os.environ.get("YOLO_DATA_PATH")
-YOLO_IMAGE_SIZE = 1000
+YOLO_IMAGE_SIZE = 1024
 
 VIRUSES = [
     'Adenovirus', 'Astrovirus', 'CCHF', 'Cowpox', 'Ebola', 'Influenza',
