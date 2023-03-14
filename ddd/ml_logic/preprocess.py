@@ -34,6 +34,7 @@ test_path = "test"
 # import classes and functions from ddd
 from ddd.params import *
 from ddd.utils import average_coord
+import math
 
 
 def extract_X_y_from_tif_image_folders(path):
@@ -297,7 +298,8 @@ def make_imagettes(img: np.array, particles: list) -> list:
 
 
 def rotate_flip(img_path, nbr_passage: int):
-
+    ''' fonction pour flipper et rotate les images en fonction en choisissant une combinaison en fonction du nombre
+    de passage'''
     degree = [
         cv2.ROTATE_90_CLOCKWISE, cv2.ROTATE_180, cv2.ROTATE_90_COUNTERCLOCKWISE
     ]
@@ -711,3 +713,132 @@ def preprocess_yolo(split_set: str = 'train'):
                                      f'{virus}_{image_file_name}.txt'),
                         "w") as f:
                     f.writelines(image_labels)
+
+
+
+
+
+
+
+
+#petites fonctions pour augmentation_of_yolo
+def new_coordinates_flip(x1, y1, flip_param):
+    if flip_param ==0:
+        x2 = x1
+        y2 = 2*0.5 - y1
+    elif flip_param ==1:
+        x2 = 2*0.5 - x1
+        y2 = y1
+    elif flip_param == -1:
+        x2 = 2*0.5 - x1
+        y2 = 2*0.5 - y1
+    return x2, y2
+
+def new_coordinates_rotation(x1, y1, degree, width, height):
+    x2 = ((x1 - 0.5)*math.cos(degree)) - ((y1 -0.5)*math.sin(degree)) + 0.5
+    y2 = ((x1 -0.5)*math.sin(degree)) - ((y1-0.5)*math.cos(degree)) + 0.5
+    new_width = height
+    new_height = width
+    return x2,y2, new_width, new_height
+
+def get_label_file(file_name):
+    file_name_in_txt = file_name.replace('jpg', 'txt')
+    label_file = os.path.join(YOLO_LABELS_PATH, 'train', file_name_in_txt)
+    return label_file
+
+def image_augmented(image_name, degree, flip_param, nbre_passage):
+    if degree == math.pi / 2:
+        degree = cv2.ROTATE_90_CLOCKWISE
+    elif degree == math.pi:
+        degree = cv2.ROTATE_180
+    else:
+        degree = cv2.ROTATE_90_COUNTERCLOCKWISE
+    image = cv2.imread(os.path.join(YOLO_IMAGE_PATH,'train', image_name))
+    new_image = cv2.rotate(image, degree)
+    new_image = cv2.flip(new_image, flip_param)
+    cv2.imwrite(os.path.join(YOLO_IMAGE_PATH, 'augmented',
+                                     f'AUG{nbre_passage}_{image_name}'), new_image)
+
+
+def new_label_documentation(file_name, file_path, rotate, flip, nbre_passage):
+    particle = []
+    with open(file_path, 'r') as f:
+        lines = f.readlines()
+        for line in lines:
+            line = line.split()
+            label = line[0]
+            x = float(line[1])
+            y = float(line[2])
+            width = line[3]
+            height = line[4]
+            #rotation
+            new_x, new_y, new_width, new_height = new_coordinates_rotation(x, y, rotate, width, height)
+            #flipping
+            new_x, new_y = new_coordinates_flip(new_x, new_y, flip)
+            particle.append(f'{label} {new_x} {new_y} {new_width} {new_height} \n')
+
+    #save the label file
+    with open(os.path.join(YOLO_LABELS_PATH, 'augmented', f'AUG{nbre_passage}_{file_name.replace("jpg","txt")}'),'w') as f:
+        f.writelines(particle)
+
+
+
+from ddd.utils import *
+#augmentation de YOLO
+def augmentation_of_yolo():
+
+    #creation of the augmented directory if it does not exist
+    try:
+        os.listdir(os.path.join(YOLO_IMAGE_PATH, 'augmented'))
+    except FileNotFoundError:
+        print("There is no augmented train directory, creating it")
+        os.makedirs(os.path.join(YOLO_IMAGE_PATH, 'augmented'))
+
+    try:
+        os.listdir(os.path.join(YOLO_LABELS_PATH, 'augmented'))
+    except FileNotFoundError:
+        print("There is no augmented train directory, creating it")
+        os.makedirs(os.path.join(YOLO_LABELS_PATH, 'augmented'))
+
+    #combination of the differents parameters of augmentation
+    degree = [math.pi/2, math.pi, 3/2*math.pi]
+    flipping_param = [1, 0, -1]
+    combinaison = list(product(degree, flipping_param))
+
+
+    yolo_image_train_path = os.path.join(YOLO_IMAGE_PATH, 'train')
+
+    #computing how many image we need to augment per viruses
+    nb_to_create = dictionary_initialization(yolo_image_train_path)
+
+    #copy paste existing image
+    for image in os.listdir(yolo_image_train_path):
+        copyfile(os.path.join(yolo_image_train_path, image),
+                 os.path.join(YOLO_IMAGE_PATH, 'augmented', image))
+    for label in os.listdir(os.path.join(YOLO_LABELS_PATH, 'train')):
+        copyfile(os.path.join(YOLO_LABELS_PATH, 'train', label),
+                 os.path.join(YOLO_LABELS_PATH, 'augmented', label))
+
+    # augmentation per viruses
+    for key in nb_to_create:
+        nbr_passage = 0
+        while nb_to_create[key] > 0:
+            degree = combinaison[nbr_passage][0]
+            flip = combinaison[nbr_passage][1]
+            for file in os.listdir(yolo_image_train_path):
+                ind= file.find('_')
+                virus = file[:ind]
+                if virus == key:
+                    #augementation de l'image
+                    image_augmented(file, degree, flip, nbr_passage)
+                    #écriture du document label
+                    file_path = get_label_file(file)
+                    new_label_documentation(file, file_path, degree, flip, nbr_passage)
+                    nb_to_create[virus] = nb_to_create[virus] - 1
+                    if nb_to_create[virus] == 0:
+                        break
+            nbr_passage += 1
+
+
+if __name__ == '__main__':
+    augmentation_of_yolo()
