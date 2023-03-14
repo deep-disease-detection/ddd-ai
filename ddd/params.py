@@ -17,10 +17,8 @@ TRAIN_PATH = os.environ.get("TRAIN_PATH")
 VALIDATION_PATH = os.environ.get("VALIDATION_PATH")
 TEST_PATH = os.environ.get("TEST_PATH")
 SAMPLE_PATH = os.environ.get("SAMPLE_PATH")
-
-#YOLO
-YOLO_DATA_PATH = os.environ.get("YOLO_DATA_PATH")
-YOLO_IMAGE_SIZE = 1000
+YOLO_IMAGE_PATH = os.environ.get("YOLO_IMAGE_PATH")
+YOLO_LABELS_PATH = os.environ.get('YOLO_LABELS_PATH')
 
 VIRUSES = [
     'Adenovirus', 'Astrovirus', 'CCHF', 'Cowpox', 'Ebola', 'Influenza',
