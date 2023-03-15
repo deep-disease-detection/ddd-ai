@@ -119,6 +119,7 @@ def load_model(stage='Production') -> keras.Model:
             latest_blob = max(blobs, key=lambda x: x.updated)
             name_latest_blob = latest_blob.name.replace('training_outputs/models/', '')
             latest_model_path_to_save = os.path.join(LOCAL_REGISTRY_PATH, 'models',  name_latest_blob)
+            print(latest_model_path_to_save)
             latest_blob.download_to_filename(latest_model_path_to_save)
             latest_model = keras.models.load_model(latest_model_path_to_save)
             print("✅ Latest model downloaded from cloud storage")
@@ -127,7 +128,7 @@ def load_model(stage='Production') -> keras.Model:
             print(f"\n❌ No model found on GCS bucket {BUCKET_NAME}")
             return None
 
-    return lastest_model
+    return latest_model
 
 
 def mlflow_run(func):
