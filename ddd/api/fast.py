@@ -34,9 +34,19 @@ def predict(post_dict: Item):
     b = base64.b64decode(b64code)
     im = imread(io.BytesIO(b))
     print(im.shape)
-    # im2 = im[:,:,1]
-    im2 = np.expand_dims(im, axis=2)
-    image = tf.constant(im2)
+
+    #check that shape is with right width and height
+    if im.shape[:2] != (256,256):
+        return {'error': 'not the right sizes'}
+
+    if len(im.shape) < 3:
+        im = np.expand_dims(im, axis=-1)
+
+    if len(im.shape) == 3 and im.shape[2] > 1:
+        im = np.mean(im, axis=-1)
+        print(im.shape)
+
+    image = tf.constant(im)
 
     assert app.state.model is not None
 
@@ -48,4 +58,4 @@ def predict(post_dict: Item):
     print(label)
     print(y_pred[0][max])
     proba = y_pred[0][max]
-    return {'Virus': str(label), 'Proba = ': round(float(proba), 2)}
+    return {'Virus': str(label), 'Proba': round(float(proba), 2)}
