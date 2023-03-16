@@ -51,6 +51,8 @@ def predict(post_dict: Item):
     assert app.state.model is not None
 
     image = np.expand_dims(image, axis=0)  #pour avoir le bon format
+    image = (image / 255).astype(np.float32)
+
     y_pred = app.state.model.predict(image)
     #récupérer le label avec le plus de probabilité
     max = y_pred.argmax()
