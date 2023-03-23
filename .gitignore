@@ -1,7 +1,7 @@
-## Make sure we don't include datasets
+## Make sure we don't include any datasets
 data
 
-## Make sure we don't send over environement/secret variables
+## Make sure we ignore environment varibales
 .env
 users.yaml
 
@@ -9,6 +9,7 @@ users.yaml
 ######################
 .DS_Store
 __MACOSX
+
 # Jupiter Notebook #
 notebook
 .pytest_cache
@@ -16,11 +17,10 @@ __pycache__
 *checkpoint.ipynb
 *.ipynb_checkpoints
 
-## Other useless stuff
+## Other useless files
 *.egg-info
 .vscode
 
 ## We don't want to save parameters in git
 training_outputs
-
 mlruns/
