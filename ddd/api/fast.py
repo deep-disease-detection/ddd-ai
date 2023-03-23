@@ -10,24 +10,19 @@ from pydantic import BaseModel
 
 app = FastAPI()
 app.state.model = load_model()
-print('model ready')
+print("model ready")
 
 
-@app.get('/')
+@app.get("/")
 def root():
-    return {'youhou': 'hourra'}
-
-
-# @app.get('/predict/')
-# def root():
-#     return {'youhou': 'hourra'}
+    return {"Hello": "World"}
 
 
 class Item(BaseModel):
     image: str
 
 
-@app.post('/predict/')
+@app.post("/predict/")
 def predict(post_dict: Item):
     b64code = post_dict.image
     # print(b64code)
@@ -35,9 +30,9 @@ def predict(post_dict: Item):
     im = imread(io.BytesIO(b))
     print(im.shape)
 
-    #check that shape is with right width and height
-    if im.shape[:2] != (256,256):
-        return {'error': 'not the right sizes'}
+    # check that the image shape is ready to be fed to the model
+    if im.shape[:2] != (256, 256):
+        return {"error": "not the right sizes"}
 
     if len(im.shape) < 3:
         im = np.expand_dims(im, axis=-1)
@@ -50,14 +45,19 @@ def predict(post_dict: Item):
 
     assert app.state.model is not None
 
-    image = np.expand_dims(image, axis=0)  #pour avoir le bon format
+    # add a dimension for feeding to the model
+    image = np.expand_dims(image, axis=0)
+
+    # make sure the pixel color values are min-maxed
     image = (image / 255).astype(np.float32)
 
+    # make prediction
     y_pred = app.state.model.predict(image)
-    #récupérer le label avec le plus de probabilité
+
+    # get virus with max probability
     max = y_pred.argmax()
     label = VIRUSES[max]
-    print(label)
-    print(y_pred[0][max])
     proba = y_pred[0][max]
-    return {'Virus': str(label), 'Proba': round(float(proba), 2)}
+
+    # return a json dictionnary with the predicted label and its probability
+    return {"Virus": str(label), "Proba": round(float(proba), 2)}
