@@ -18,12 +18,12 @@ This package contains all the code required to train, evaluate and predict virus
 #### Interface
 - **main**: main package method including a method to get preprocessed Tf.Dataset objects for training, a method to train the model and to evaluate it as well as a method to make a prediction.
 
-### ml_logic
+#### ml_logic
 - **models**: contains methods to intialize and train the different models available in the package. The models are: Custom CNN from the paper, DenseNet201, VGG19 as well as two dummy models (CNN and test).
 - **preprocess**: contains all methods to preprocess the raw dataset. Check out the preprocessing section on this readme for more information.
 - **registry**: Methods to load and save model weights either locally, on MLFlow or on a Google Cloud Bucket. Includes methods to save results and training parameters.
 
-### Other
+#### Other
 - **params**: All package parameters. Some are loaded from .env file while others are set in this file.
 - **utils**: Helper methods.
 
