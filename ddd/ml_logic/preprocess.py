@@ -20,7 +20,7 @@ from keras.utils import to_categorical
 import tensorflow as tf
 from shutil import copyfile
 
-#pour la fonction convert base64
+# pour la fonction convert base64
 from imageio import imread
 import base64
 import io
@@ -38,7 +38,7 @@ import math
 
 
 def extract_X_y_from_tif_image_folders(path):
-    '''
+    """
     takes a path to a folder containing folders of images and returns
     a numpy array of images and a numpy array of labels
         Parameters:
@@ -46,14 +46,14 @@ def extract_X_y_from_tif_image_folders(path):
         Returns:
             images (numpy array): numpy array of images
             y (numpy array): numpy array of labels
-    '''
+    """
 
     images = []
     y = []
     for folder in os.listdir(path):
-        if folder == '_EXCLUDED' or folder == 'crop_outlines':
+        if folder == "_EXCLUDED" or folder == "crop_outlines":
             continue
-        virus_type = folder.split('/')[-1]
+        virus_type = folder.split("/")[-1]
         for file in os.listdir(os.path.join(path, folder)):
             img = cv2.imread(os.path.join(path, folder, file))
             if img is None:
@@ -67,7 +67,7 @@ def extract_X_y_from_tif_image_folders(path):
 
 
 def encoder_and_get_categories_from_y(y: np.ndarray):
-    '''
+    """
     Encode the labels using LabelEncoder and convert them to categorical
         Parameters:
              y (np.ndarray): The labels of the data
@@ -75,7 +75,7 @@ def encoder_and_get_categories_from_y(y: np.ndarray):
         Returns:
             encoded_y (np.ndarray): The encoded labels
 
-    '''
+    """
     encoder = LabelEncoder()
     encoder.fit(y)
     encoded_y = encoder.transform(y)
@@ -84,9 +84,10 @@ def encoder_and_get_categories_from_y(y: np.ndarray):
     return encoded_y
 
 
-def get_tif_images_from_directories(path: str, train_path: str,
-                                    validation_path: str, test_path: str):
-    '''
+def get_tif_images_from_directories(
+    path: str, train_path: str, validation_path: str, test_path: str
+):
+    """
     takes a path to a folder containing folders of images and returns
     a numpy array of images and a numpy array of labels
         Parameters:
@@ -101,31 +102,34 @@ def get_tif_images_from_directories(path: str, train_path: str,
             y_validation (numpy array): numpy array of validation labels
             X_test (numpy array): numpy array of test images
             y_test (numpy array): numpy array of test labels
-    '''
+    """
     # get the train images and labels
     X_train, y_train = extract_X_y_from_tif_image_folders(
-        os.path.join(path, train_path))
+        os.path.join(path, train_path)
+    )
     y_train = encoder_and_get_categories_from_y(y_train)
     # get the validation images and labels
     X_validation, y_validation = extract_X_y_from_tif_image_folders(
-        os.path.join(path, validation_path))
+        os.path.join(path, validation_path)
+    )
     y_validation = encoder_and_get_categories_from_y(y_validation)
     # get the test images and labels
-    X_test, y_test = extract_X_y_from_tif_image_folders(
-        os.path.join(path, test_path))
+    X_test, y_test = extract_X_y_from_tif_image_folders(os.path.join(path, test_path))
     y_test = encoder_and_get_categories_from_y(y_test)
 
     return X_train, y_train, X_validation, y_validation, X_test, y_test
 
 
-def get_samples_of_data(X_train: np.array,
-                        y_train: np.array,
-                        X_validation: np.array,
-                        y_validation: np.array,
-                        X_test: np.array,
-                        y_test: np.array,
-                        sample_rate: float = 0.1):
-    '''
+def get_samples_of_data(
+    X_train: np.array,
+    y_train: np.array,
+    X_validation: np.array,
+    y_validation: np.array,
+    X_test: np.array,
+    y_test: np.array,
+    sample_rate: float = 0.1,
+):
+    """
     takes the original train, validation and test data and returns
     a sample of the data to be used for testing models and training
         Parameters:
@@ -142,7 +146,7 @@ def get_samples_of_data(X_train: np.array,
             y_validation_samples (numpy array): numpy array of validation labels
             X_test_samples (numpy array): numpy array of test images
             y_test_samples (numpy array): numpy array of test labels
-    '''
+    """
 
     # shuffle the train data
     X_train, y_train = shuffle(X_train, y_train)
@@ -160,149 +164,172 @@ def get_samples_of_data(X_train: np.array,
     X_test_samples = X_test[:num_samples]
     y_test_samples = y_test[:num_samples]
 
-    return X_train_samples, y_train_samples, X_validation_samples, y_validation_samples, X_test_samples, y_test_samples
+    return (
+        X_train_samples,
+        y_train_samples,
+        X_validation_samples,
+        y_validation_samples,
+        X_test_samples,
+        y_test_samples,
+    )
 
 
-def get_dic_center(split_set: str = 'train'):
-    '''
-        Create a dictionary with all coordinates center for each virus and each file
-    '''
-    #dictionary initiation
+def get_dic_center(split_set: str = "train"):
+    """
+    Create a dictionary with all coordinates center for each virus and each file
+    """
+    # dictionary initiation
     train_data_dic = {}
     list_virus = [
-        v for v in os.listdir(os.path.join(RAW_DATA_PATH, split_set))
-        if v[0] != '.'
+        v for v in os.listdir(os.path.join(RAW_DATA_PATH, split_set)) if v[0] != "."
     ]
     for virus in list_virus:
         train_data_dic[virus] = {}
 
-    #filling the dictinary virus by virus
+    # filling the dictinary virus by virus
     for virus in list_virus:
-        path_position_file = os.path.join(RAW_DATA_PATH, split_set, virus,
-                                          'particle_positions')
-        list_position_file = [
-            f for f in os.listdir(path_position_file) if f[0] != '.'
-        ]
-        #looping over file
+        path_position_file = os.path.join(
+            RAW_DATA_PATH, split_set, virus, "particle_positions"
+        )
+        list_position_file = [f for f in os.listdir(path_position_file) if f[0] != "."]
+        # looping over file
         for file in list_position_file:
             with open(
-                    os.path.join(RAW_DATA_PATH, split_set, virus,
-                                 'particle_positions', file), 'r') as f:
+                os.path.join(
+                    RAW_DATA_PATH, split_set, virus, "particle_positions", file
+                ),
+                "r",
+            ) as f:
                 lines = f.readlines()
                 center_coords = []
                 particle = []
                 for i in range(3, len(lines)):
-                    if lines[i] != 'particleposition\n':
+                    if lines[i] != "particleposition\n":
                         coordinate = tuple(
-                            float(c) for c in lines[i].strip('\n').split(';'))
+                            float(c) for c in lines[i].strip("\n").split(";")
+                        )
                         particle.append(coordinate)
                         if i == len(lines) - 1 and len(particle) == 2:
                             center_coords.append(
-                                average_coord(particle[0], particle[1]))
+                                average_coord(particle[0], particle[1])
+                            )
                         elif i == len(lines) - 1:
                             for coord in particle:
                                 center_coords.append(coord)
                     else:
-                        #compute the center between 2 center point of one single particule
+                        # compute the center between 2 center point of one single particule
                         if len(particle) == 2:
                             center_coords.append(
-                                average_coord(particle[0], particle[1]))
+                                average_coord(particle[0], particle[1])
+                            )
                             particle = []
                         else:
                             for coord in particle:
                                 center_coords.append(coord)
                             particle = []
-                #file_name = file.rstrip('_particlepositions.txt')
-                file_name = file.replace('_particlepositions.txt', '')
+                # file_name = file.rstrip('_particlepositions.txt')
+                file_name = file.replace("_particlepositions.txt", "")
                 train_data_dic[virus][file_name] = center_coords
 
     return train_data_dic
 
 
-def get_pic_mesure(split_set: str = 'train'):
-    '''
-        return a dictionary with image mesurement and scale
-    '''
+def get_pic_mesure(split_set: str = "train"):
+    """
+    return a dictionary with image mesurement and scale
+    """
 
     pic_data_dic = {}
     list_virus = [
-        v for v in os.listdir(os.path.join(RAW_DATA_PATH, split_set))
-        if v[0] != '.'
+        v for v in os.listdir(os.path.join(RAW_DATA_PATH, split_set)) if v[0] != "."
     ]
 
     for virus in list_virus:
         pic_data_dic[virus] = {}
 
     for virus in list_virus:
-        path_tag_files = os.path.join(RAW_DATA_PATH, split_set, virus, 'tags')
+        path_tag_files = os.path.join(RAW_DATA_PATH, split_set, virus, "tags")
         list_tag_files = os.listdir(path_tag_files)
         for file in list_tag_files:
-            with open(f'{path_tag_files}/{file}', 'r') as csvfile:
-                reader = csv.reader(csvfile, delimiter=';')
+            with open(f"{path_tag_files}/{file}", "r") as csvfile:
+                reader = csv.reader(csvfile, delimiter=";")
                 all_infos = []
                 for row in reader:
                     all_infos.append(row)
-                #file_name = file.rstrip('.tif_tags.csv')
-                file_name = file.replace('.tif_tags.csv', '')
+                # file_name = file.rstrip('.tif_tags.csv')
+                file_name = file.replace(".tif_tags.csv", "")
                 pic_data_dic[virus][file_name] = {}
-                pic_data_dic[virus][file_name]['Height'] = int(all_infos[0][1])
-                pic_data_dic[virus][file_name]['Width'] = int(all_infos[1][1])
-                pic_data_dic[virus][file_name]['Xscale'] = float(
-                    all_infos[5][1].replace(',', '.'))
-                pic_data_dic[virus][file_name]['Yscale'] = float(
-                    all_infos[6][1].replace(',', '.'))
+                pic_data_dic[virus][file_name]["Height"] = int(all_infos[0][1])
+                pic_data_dic[virus][file_name]["Width"] = int(all_infos[1][1])
+                pic_data_dic[virus][file_name]["Xscale"] = float(
+                    all_infos[5][1].replace(",", ".")
+                )
+                pic_data_dic[virus][file_name]["Yscale"] = float(
+                    all_infos[6][1].replace(",", ".")
+                )
     return pic_data_dic
 
 
 def resize_image(img: np.array, file: str, pic_dict: dict) -> np.array:
-    '''
+    """
     Method that resizes an image to obtain a resolution of 1px = 1nm
     Uses picture meta data from pic_dict
     Uses tf.image.resize with Lanczos3 kernel interpolation
-    '''
+    """
 
-    new_width = round(pic_dict[file]['Height'] * pic_dict[file]['Yscale'])
-    new_height = round(pic_dict[file]['Width'] * pic_dict[file]['Xscale'])
+    new_width = round(pic_dict[file]["Height"] * pic_dict[file]["Yscale"])
+    new_height = round(pic_dict[file]["Width"] * pic_dict[file]["Xscale"])
 
-    resized_img = tf.image.resize(img,
-                                  size=(new_width, new_height),
-                                  method=tf.image.ResizeMethod.LANCZOS3)
+    resized_img = tf.image.resize(
+        img, size=(new_width, new_height), method=tf.image.ResizeMethod.LANCZOS3
+    )
     return resized_img.numpy()
 
 
 def resize_particles(particles: list, file: str, pic_dict: dict) -> list:
-    '''
+    """
     Method that repositions the particles following the resize
     Uses picture meta data from pic_dict
-    '''
+    """
     for i in range(len(particles)):
-        particles[i] = (particles[i][0] * pic_dict[file]['Yscale'],
-                        particles[i][1] * pic_dict[file]['Xscale'])
+        particles[i] = (
+            particles[i][0] * pic_dict[file]["Yscale"],
+            particles[i][1] * pic_dict[file]["Xscale"],
+        )
     return particles
 
 
 def make_imagettes(img: np.array, particles: list) -> list:
+    """
+    Parameters
+        img: A numpy array of the virus image to be cropped
+        particles: the list of all particles in that image
+    Returns
+        A list of all 256x256 images cropped around each virus particle
+    """
+
     imagettes = []
 
     for p in particles:
         offset_height = round(p[1] + IMAGE_SIZE - IMAGE_SIZE / 2)
         offset_width = round(p[0] + IMAGE_SIZE - IMAGE_SIZE / 2)
         imagettes.append(
-            tf.image.crop_to_bounding_box(img,
-                                          offset_height=offset_height,
-                                          offset_width=offset_width,
-                                          target_height=IMAGE_SIZE,
-                                          target_width=IMAGE_SIZE).numpy())
+            tf.image.crop_to_bounding_box(
+                img,
+                offset_height=offset_height,
+                offset_width=offset_width,
+                target_height=IMAGE_SIZE,
+                target_width=IMAGE_SIZE,
+            ).numpy()
+        )
 
     return imagettes
 
 
 def rotate_flip(img_path, nbr_passage: int):
-    ''' fonction pour flipper et rotate les images en fonction en choisissant une combinaison en fonction du nombre
-    de passage'''
-    degree = [
-        cv2.ROTATE_90_CLOCKWISE, cv2.ROTATE_180, cv2.ROTATE_90_COUNTERCLOCKWISE
-    ]
+    """fonction pour flipper et rotate les images en fonction en choisissant une combinaison en fonction du nombre
+    de passage"""
+    degree = [cv2.ROTATE_90_CLOCKWISE, cv2.ROTATE_180, cv2.ROTATE_90_COUNTERCLOCKWISE]
     flipping_param = [1, 0, -1]
     combinaison = list(product(degree, flipping_param))
     img = cv2.imread(img_path)
@@ -311,40 +338,55 @@ def rotate_flip(img_path, nbr_passage: int):
     return new_image
 
 
-def save_imagettes(imagettes: list, split_set: str, virus: str, file: str,
-                   format: str):
+def save_imagettes(
+    imagettes: list, split_set: str, virus: str, file: str, format: str = "png"
+):
+    """
+    Saves all the 256x256 px imagettes for a particular image
+    Parameters
+        imagettes: list of all imagettes to be saved
+        split_set: Train, validation or test
+        virus: virus folder being preprocessed
+        file: file name of the image being preprocessed
+        format: chosen format to save the image
+    """
     for i, img in enumerate(imagettes):
-        imagette_file_name = f'{file}_{str(i)}.{format}'
-        destination_path = os.path.join(PROCESS_DATA_PATH, split_set, virus,
-                                        imagette_file_name)
+        imagette_file_name = f"{file}_{str(i)}.{format}"
+        destination_path = os.path.join(
+            PROCESS_DATA_PATH, split_set, virus, imagette_file_name
+        )
         cv2.imwrite(destination_path, img)
 
 
 def preprocess_viruses():
+    """
+    Preprocesses data virus folder by virus folder, image by image.
+    Will not reprocess a virus if its processed folder is already created.
+    """
 
-    #Check if process directories exist, otherwise create them
+    # Check if process directories exist, otherwise create them
     try:
         os.listdir(os.path.join(PROCESS_DATA_PATH, TO_PREPROCESS))
     except FileNotFoundError:
         print("There is no process directory, creating it for you")
         os.makedirs(os.path.join(PROCESS_DATA_PATH, TO_PREPROCESS))
 
-    #Loading structure and data dictionnaries
+    # Loading structure and data dictionnaries
     particle_dict = get_dic_center(TO_PREPROCESS)
     pic_dict = get_pic_mesure(TO_PREPROCESS)
 
-    #Subsetting to specific folders if test mode
-    print(f'Executing in test mode for {VIRUSES}')
+    # Subsetting to specific folders if test mode
+    print(f"Executing in test mode for {VIRUSES}")
     particle_dict = {k: particle_dict.get(k) for k in VIRUSES}
     pic_dict = {k: pic_dict.get(k) for k in VIRUSES}
 
     vcount = 0
     for virus, files in particle_dict.items():
-        #Printing progress
+        # Printing progress
         vcount = vcount + 1
         print(f"Preprocessing virus folder {vcount} of {len(particle_dict)} 🦠")
 
-        #Check if directory for processed virus data already exists, otherwise make it
+        # Check if directory for processed virus data already exists, otherwise make it
         if virus in os.listdir(os.path.join(PROCESS_DATA_PATH, TO_PREPROCESS)):
             print(f"Skipping over {virus} because it was already processed")
             continue
@@ -356,44 +398,42 @@ def preprocess_viruses():
         for file, particles in files.items():
             image_count = image_count + 1
 
-            print(
-                f"-------Preprocessing image file {image_count} of {len(files)} 🎆"
-            )
+            print(f"-------Preprocessing image file {image_count} of {len(files)} 🎆")
 
-            #Load the image
-            image_path = os.path.join(RAW_DATA_PATH, TO_PREPROCESS, virus,
-                                      f'{file}.tif')
+            # Load the image
+            image_path = os.path.join(
+                RAW_DATA_PATH, TO_PREPROCESS, virus, f"{file}.tif"
+            )
 
             img = cv2.imread(image_path, -1).astype(np.float32)
 
             if len(img.shape) == 2:
-                img = np.expand_dims(
-                    cv2.imread(image_path, -1).astype(np.float32), 2)
+                img = np.expand_dims(cv2.imread(image_path, -1).astype(np.float32), 2)
             elif len(img.shape) > 2:
                 img = np.expand_dims(img[:, :, 1], 2)
 
-            #Resize the image
+            # Resize the image
             img = resize_image(img, file, pic_dict[virus])
 
-            #Apply the same transformation to the particles
-            resized_particles = resize_particles(particles, file,
-                                                 pic_dict[virus])
+            # Apply the same transformation to the particles
+            resized_particles = resize_particles(particles, file, pic_dict[virus])
 
-            #Min-max scale the image
-            img = (cv2.normalize(img, None, 1.0, 0.0, cv2.NORM_MINMAX) *
-                   255).astype(np.uint8)
+            # Min-max scale the image
+            img = (cv2.normalize(img, None, 1.0, 0.0, cv2.NORM_MINMAX) * 255).astype(
+                np.uint8
+            )
 
-            #Add padding to the image
-            img = cv2.copyMakeBorder(img, IMAGE_SIZE, IMAGE_SIZE, IMAGE_SIZE,
-                                     IMAGE_SIZE, cv2.BORDER_REFLECT)
+            # Add padding to the image
+            img = cv2.copyMakeBorder(
+                img, IMAGE_SIZE, IMAGE_SIZE, IMAGE_SIZE, IMAGE_SIZE, cv2.BORDER_REFLECT
+            )
 
-            img = np.expand_dims(img,
-                                 2)  #reshape to (H, W, 1) for tensforflow :)
+            img = np.expand_dims(img, 2)  # reshape to (H, W, 1) for tensforflow :)
 
-            #Crop around each particle
+            # Crop around each particle
             imagettes = make_imagettes(img, resized_particles)
 
-            #Create the files
+            # Create the files
             save_imagettes(imagettes, TO_PREPROCESS, virus, file, "png")
 
 
@@ -401,9 +441,9 @@ def augment_pictures():
 
     virus_list = os.listdir(TRAIN_PATH)
 
-    print('Starting image augmentation script 🦠')
+    print("Starting image augmentation script 🦠")
 
-    #Check if process directories exist, otherwise create them
+    # Check if process directories exist, otherwise create them
     try:
         os.listdir(AUGTRAIN_PATH)
     except FileNotFoundError:
@@ -425,27 +465,30 @@ def augment_pictures():
         if nbr_of_imagettes < IMAGES_PER_VIRUS:
             # copy paste all images in another directory
             for image in file_name_list:
-                copyfile(os.path.join(source_path, image),
-                         os.path.join(dest_virus_folder, image))
+                copyfile(
+                    os.path.join(source_path, image),
+                    os.path.join(dest_virus_folder, image),
+                )
 
-            #augment the imagettes
+            # augment the imagettes
             nbre_passage = 0
             while len(os.listdir(dest_virus_folder)) < IMAGES_PER_VIRUS:
                 for image in file_name_list:
-                    new_image = rotate_flip(os.path.join(source_path, image),
-                                            nbre_passage)
-                    print(f'AUG{nbre_passage}{image}')
+                    new_image = rotate_flip(
+                        os.path.join(source_path, image), nbre_passage
+                    )
+                    print(f"AUG{nbre_passage}{image}")
                     print(len(os.listdir(dest_virus_folder)))
                     cv2.imwrite(
-                        os.path.join(dest_virus_folder,
-                                     f'AUG_{nbre_passage}_{image}'), new_image)
+                        os.path.join(dest_virus_folder, f"AUG_{nbre_passage}_{image}"),
+                        new_image,
+                    )
                     if len(os.listdir(dest_virus_folder)) == IMAGES_PER_VIRUS:
-                        print('done')
+                        print("done")
                         break
                 nbre_passage = nbre_passage + 1
                 if nbre_passage >= 9:
-                    print(
-                        'not enough pictures to reach target imagette number')
+                    print("not enough pictures to reach target imagette number")
 
         else:
             # randomly copy images
@@ -453,17 +496,18 @@ def augment_pictures():
                 index = np.random.randint(len(file_name_list))
                 file_name = file_name_list[index]
 
-                #pour ne pas faire de doublons
-                if file_name not in os.listdir(
-                        os.path.join(AUGTRAIN_PATH, virus)):
-                    copyfile(os.path.join(source_path, file_name),
-                             os.path.join(AUGTRAIN_PATH, virus, file_name))
+                # pour ne pas faire de doublons
+                if file_name not in os.listdir(os.path.join(AUGTRAIN_PATH, virus)):
+                    copyfile(
+                        os.path.join(source_path, file_name),
+                        os.path.join(AUGTRAIN_PATH, virus, file_name),
+                    )
 
                 file_name_list.pop(index)
 
 
 def make_sample():
-    '''faire un petit dataset pour les test'''
+    """faire un petit dataset pour les test"""
 
     for virus in os.listdir(AUGTRAIN_PATH):
         if virus in os.listdir(SAMPLE_PATH):
@@ -476,85 +520,97 @@ def make_sample():
             virus_path = os.path.join(AUGTRAIN_PATH, virus)
             file_name = os.listdir(virus_path)[i]
 
-            copyfile(os.path.join(virus_path, file_name),
-                     os.path.join(SAMPLE_PATH, virus, file_name))
+            copyfile(
+                os.path.join(virus_path, file_name),
+                os.path.join(SAMPLE_PATH, virus, file_name),
+            )
 
 
 def convert_b64_to_tf(b64code):
-    '''convert the base64 code of the image to a tensorflow shape (256,256, 1)'''
-    b = base64.b64decode(b64code.decode('utf-8'))
+    """convert the base64 code of the image to a tensorflow shape (256,256, 1)"""
+    b = base64.b64decode(b64code.decode("utf-8"))
     im = imread(io.BytesIO(b))
     im2 = im[:, :, 1]
     im2 = np.expand_dims(im2, axis=2)
     return tf.constant(im2)
 
 
-def get_dic_center_yolo(split_set: str = 'train'):
-    '''
-        Create a dictionary with all coordinates center for each virus and each file
-    '''
-    #dictionary initiation
+def get_dic_center_yolo(split_set: str = "train"):
+    """
+    Create a dictionary with all coordinates center for each virus and each file
+    """
+    # dictionary initiation
     train_data_dic = {}
     list_virus = [
-        v for v in os.listdir(os.path.join(RAW_DATA_PATH, split_set))
-        if v[0] != '.'
+        v for v in os.listdir(os.path.join(RAW_DATA_PATH, split_set)) if v[0] != "."
     ]
 
-    #filling the dictinary virus by virus
+    # filling the dictinary virus by virus
     for virus in list_virus:
         train_data_dic[virus] = {}
-        path_position_file = os.path.join(RAW_DATA_PATH, split_set, virus,
-                                          'particle_positions')
+        path_position_file = os.path.join(
+            RAW_DATA_PATH, split_set, virus, "particle_positions"
+        )
 
-        #getting all anotation files
-        list_position_file = [
-            f for f in os.listdir(path_position_file) if f[0] != '.'
-        ]
-        #looping over each annotation file
+        # getting all anotation files
+        list_position_file = [f for f in os.listdir(path_position_file) if f[0] != "."]
+        # looping over each annotation file
         for file in list_position_file:
             with open(
-                    os.path.join(RAW_DATA_PATH, split_set, virus,
-                                 'particle_positions', file), 'r') as f:
+                os.path.join(
+                    RAW_DATA_PATH, split_set, virus, "particle_positions", file
+                ),
+                "r",
+            ) as f:
                 lines = f.readlines()
                 particles = []
                 particle = []
                 for i in range(3, len(lines)):
-                    if lines[i] != 'particleposition\n':
+                    if lines[i] != "particleposition\n":
                         coordinate = tuple(
-                            float(c) for c in lines[i].strip('\n').split(';'))
+                            float(c) for c in lines[i].strip("\n").split(";")
+                        )
                         particle.append(coordinate)
 
-                        #handle last particle of file
+                        # handle last particle of file
                         if i == len(lines) - 1 and len(particle) == 2:
-                            particles.append(
-                                [average_coord(particle[0], particle[1])])
+                            particles.append([average_coord(particle[0], particle[1])])
                         elif i == len(lines) - 1:
                             particles.append(particle)
                     else:
-                        #compute the center between 2 center point of one single particle
+                        # compute the center between 2 center point of one single particle
                         if len(particle) == 2:
-                            particles.append(
-                                [average_coord(particle[0], particle[1])])
+                            particles.append([average_coord(particle[0], particle[1])])
                             particle = []
                         else:
                             particles.append(particle)
                             particle = []
-                file_name = file.replace('_particlepositions.txt', '')
+                file_name = file.replace("_particlepositions.txt", "")
                 train_data_dic[virus][file_name] = particles
 
     return train_data_dic
 
 
 def resize_particles_yolo(particles: list, file: str, pic_dict: dict):
-    return [[(c[0] * pic_dict[file]['Yscale'], c[1] * pic_dict[file]['Xscale'])
-             for c in particle] for particle in particles]
+    return [
+        [
+            (c[0] * pic_dict[file]["Yscale"], c[1] * pic_dict[file]["Xscale"])
+            for c in particle
+        ]
+        for particle in particles
+    ]
 
 
 def check_box_in_pic(x, y, w, h):
-    return x - w / 2 >= 0 and x + w / 2 <= YOLO_IMAGE_SIZE and y - h / 2 >= 0 and y + h / 2 <= YOLO_IMAGE_SIZE
+    return (
+        x - w / 2 >= 0
+        and x + w / 2 <= YOLO_IMAGE_SIZE
+        and y - h / 2 >= 0
+        and y + h / 2 <= YOLO_IMAGE_SIZE
+    )
 
 
-def preprocess_yolo(split_set: str = 'train'):
+def preprocess_yolo(split_set: str = "train"):
 
     particle_dict = get_dic_center_yolo(split_set)
     pic_dict = get_pic_mesure(split_set)
@@ -568,38 +624,41 @@ def preprocess_yolo(split_set: str = 'train'):
 
             print(f"--------- Processing image {i+1}/{image_file_count} 🎞️")
 
-            image_path = os.path.join(RAW_DATA_PATH, split_set, virus,
-                                      f'{image_file_name}.tif')
+            image_path = os.path.join(
+                RAW_DATA_PATH, split_set, virus, f"{image_file_name}.tif"
+            )
 
             img = cv2.imread(image_path, -1).astype(np.float32)
 
-            #handle images that have 3 channels
+            # handle images that have 3 channels
             if len(img.shape) == 2:
-                img = np.expand_dims(
-                    cv2.imread(image_path, -1).astype(np.float32), 2)
+                img = np.expand_dims(cv2.imread(image_path, -1).astype(np.float32), 2)
             elif len(img.shape) > 2:
                 img = np.expand_dims(img[:, :, 1], 2)
 
-            #get particles
+            # get particles
             particles = particle_dict.get(virus).get(image_file_name)
 
-            #resize image and particles
+            # resize image and particles
             img = resize_image(img, image_file_name, pic_dict.get(virus))
-            r_particles = resize_particles_yolo(particles, image_file_name,
-                                                pic_dict.get(virus))
+            r_particles = resize_particles_yolo(
+                particles, image_file_name, pic_dict.get(virus)
+            )
 
-            #crop images to 1000x1000 pixels
+            # crop images to 1000x1000 pixels
             x_coordinates = []
             y_coordinates = []
             for particle in r_particles:
                 x_coordinates += [p[0] for p in particle]
                 y_coordinates += [p[1] for p in particle]
 
-            #compute mean of all particles
-            central_particle = (int(np.mean(x_coordinates)),
-                                int(np.mean(y_coordinates)))
+            # compute mean of all particles
+            central_particle = (
+                int(np.mean(x_coordinates)),
+                int(np.mean(y_coordinates)),
+            )
 
-            #compute the margin we need to pad if necessary
+            # compute the margin we need to pad if necessary
             top = central_particle[1] + YOLO_IMAGE_SIZE / 2
             bottom = central_particle[1] - YOLO_IMAGE_SIZE / 2
             right = central_particle[0] + YOLO_IMAGE_SIZE / 2
@@ -610,46 +669,50 @@ def preprocess_yolo(split_set: str = 'train'):
             border_right = int(max(right - img.shape[1], 0))
             border_left = int(abs(min(left, 0)))
 
-            #pad if necessary
-            crop_img = cv2.copyMakeBorder(img,
-                                          border_bottom,
-                                          border_top,
-                                          border_left,
-                                          border_right,
-                                          borderType=cv2.BORDER_CONSTANT)
+            # pad if necessary
+            crop_img = cv2.copyMakeBorder(
+                img,
+                border_bottom,
+                border_top,
+                border_left,
+                border_right,
+                borderType=cv2.BORDER_CONSTANT,
+            )
 
-            #crop
-            crop_img = crop_img[int(bottom + border_bottom):int(top +
-                                                                border_bottom),
-                                int(left + border_left):int(right +
-                                                            border_left)]
+            # crop
+            crop_img = crop_img[
+                int(bottom + border_bottom) : int(top + border_bottom),
+                int(left + border_left) : int(right + border_left),
+            ]
 
-            #adapt particle positions to crop
-            final_particles = [[(p[0] - left, p[1] - bottom) for p in particle]
-                               for particle in r_particles]
+            # adapt particle positions to crop
+            final_particles = [
+                [(p[0] - left, p[1] - bottom) for p in particle]
+                for particle in r_particles
+            ]
 
-            #make the bounding boxes
+            # make the bounding boxes
             image_labels = []
 
             for f_particle in final_particles:
-                #pick a color for the particle
+                # pick a color for the particle
 
-                #if there is only one coordinate, we make a box using virus metadata
+                # if there is only one coordinate, we make a box using virus metadata
                 if len(f_particle) == 1:
 
-                    #if only 1 coordinate set and elongated, simply skip
+                    # if only 1 coordinate set and elongated, simply skip
                     if VIRUS_METADATA.get(virus).get("elongated"):
                         continue
 
                     yolo_x = f_particle[0][0]
                     yolo_y = f_particle[0][1]
-                    yolo_w = VIRUS_METADATA.get(virus)['diameter']
-                    yolo_h = VIRUS_METADATA.get(virus)['diameter']
+                    yolo_w = VIRUS_METADATA.get(virus)["diameter"]
+                    yolo_h = VIRUS_METADATA.get(virus)["diameter"]
 
                     if not check_box_in_pic(yolo_x, yolo_y, yolo_w, yolo_h):
                         continue
 
-                    #Normalize x,y, w and h
+                    # Normalize x,y, w and h
                     yolo_x = yolo_x / YOLO_IMAGE_SIZE
                     yolo_y = yolo_y / YOLO_IMAGE_SIZE
                     yolo_h = yolo_h / YOLO_IMAGE_SIZE
@@ -663,7 +726,7 @@ def preprocess_yolo(split_set: str = 'train'):
                     x_coordinates = [p[0] for p in f_particle]
                     y_coordinates = [p[1] for p in f_particle]
 
-                    margin = VIRUS_METADATA.get(virus)['diameter']
+                    margin = VIRUS_METADATA.get(virus)["diameter"]
                     min_x = min(x_coordinates) - margin
                     max_x = max(x_coordinates) + margin
                     min_y = min(y_coordinates) - margin
@@ -680,7 +743,7 @@ def preprocess_yolo(split_set: str = 'train'):
                     if not check_box_in_pic(yolo_x, yolo_y, yolo_w, yolo_h):
                         continue
 
-                    #Normalize x,y, w and h
+                    # Normalize x,y, w and h
                     yolo_x = yolo_x / YOLO_IMAGE_SIZE
                     yolo_y = yolo_y / YOLO_IMAGE_SIZE
                     yolo_h = yolo_h / YOLO_IMAGE_SIZE
@@ -690,61 +753,66 @@ def preprocess_yolo(split_set: str = 'train'):
                         f'{VIRUS_METADATA.get(virus).get("id")} {yolo_x} {yolo_y} {yolo_w} {yolo_h} \n'
                     )
 
-            #if at least one particle makes it, save the image and the file
-            if (len(image_labels) > 0):
+            # if at least one particle makes it, save the image and the file
+            if len(image_labels) > 0:
                 crop_img = (
-                    cv2.normalize(crop_img, None, 1.0, 0.0, cv2.NORM_MINMAX) *
-                    255).astype(np.uint8)
+                    cv2.normalize(crop_img, None, 1.0, 0.0, cv2.NORM_MINMAX) * 255
+                ).astype(np.uint8)
 
-                #save the cropped image
+                # save the cropped image
                 if split_set == "validation":
                     split_set_save = "valid"
                 else:
                     split_set_save = split_set
 
                 saved_image_path = os.path.join(
-                    YOLO_DATA_PATH, 'images', split_set_save,
-                    f'{virus}_{image_file_name}.jpg')
+                    YOLO_DATA_PATH,
+                    "images",
+                    split_set_save,
+                    f"{virus}_{image_file_name}.jpg",
+                )
                 cv2.imwrite(saved_image_path, crop_img)
 
-                #save the label file
+                # save the label file
                 with open(
-                        os.path.join(YOLO_DATA_PATH, 'labels', split_set_save,
-                                     f'{virus}_{image_file_name}.txt'),
-                        "w") as f:
+                    os.path.join(
+                        YOLO_DATA_PATH,
+                        "labels",
+                        split_set_save,
+                        f"{virus}_{image_file_name}.txt",
+                    ),
+                    "w",
+                ) as f:
                     f.writelines(image_labels)
 
 
-
-
-
-
-
-
-#petites fonctions pour augmentation_of_yolo
+# petites fonctions pour augmentation_of_yolo
 def new_coordinates_flip(x1, y1, flip_param):
-    if flip_param ==0:
+    if flip_param == 0:
         x2 = x1
-        y2 = 2*0.5 - y1
-    elif flip_param ==1:
-        x2 = 2*0.5 - x1
+        y2 = 2 * 0.5 - y1
+    elif flip_param == 1:
+        x2 = 2 * 0.5 - x1
         y2 = y1
     elif flip_param == -1:
-        x2 = 2*0.5 - x1
-        y2 = 2*0.5 - y1
+        x2 = 2 * 0.5 - x1
+        y2 = 2 * 0.5 - y1
     return x2, y2
 
+
 def new_coordinates_rotation(x1, y1, degree, width, height):
-    x2 = ((x1 - 0.5)*math.cos(degree)) - ((y1 -0.5)*math.sin(degree)) + 0.5
-    y2 = ((x1 -0.5)*math.sin(degree)) - ((y1-0.5)*math.cos(degree)) + 0.5
+    x2 = ((x1 - 0.5) * math.cos(degree)) - ((y1 - 0.5) * math.sin(degree)) + 0.5
+    y2 = ((x1 - 0.5) * math.sin(degree)) - ((y1 - 0.5) * math.cos(degree)) + 0.5
     new_width = height
     new_height = width
-    return x2,y2, new_width, new_height
+    return x2, y2, new_width, new_height
+
 
 def get_label_file(file_name):
-    file_name_in_txt = file_name.replace('jpg', 'txt')
-    label_file = os.path.join(YOLO_LABELS_PATH, 'train', file_name_in_txt)
+    file_name_in_txt = file_name.replace("jpg", "txt")
+    label_file = os.path.join(YOLO_LABELS_PATH, "train", file_name_in_txt)
     return label_file
+
 
 def image_augmented(image_name, degree, flip_param, nbre_passage):
     if degree == math.pi / 2:
@@ -753,16 +821,18 @@ def image_augmented(image_name, degree, flip_param, nbre_passage):
         degree = cv2.ROTATE_180
     else:
         degree = cv2.ROTATE_90_COUNTERCLOCKWISE
-    image = cv2.imread(os.path.join(YOLO_IMAGE_PATH,'train', image_name))
+    image = cv2.imread(os.path.join(YOLO_IMAGE_PATH, "train", image_name))
     new_image = cv2.rotate(image, degree)
     new_image = cv2.flip(new_image, flip_param)
-    cv2.imwrite(os.path.join(YOLO_IMAGE_PATH, 'augmented',
-                                     f'AUG{nbre_passage}_{image_name}'), new_image)
+    cv2.imwrite(
+        os.path.join(YOLO_IMAGE_PATH, "augmented", f"AUG{nbre_passage}_{image_name}"),
+        new_image,
+    )
 
 
 def new_label_documentation(file_name, file_path, rotate, flip, nbre_passage):
     particle = []
-    with open(file_path, 'r') as f:
+    with open(file_path, "r") as f:
         lines = f.readlines()
         for line in lines:
             line = line.split()
@@ -771,53 +841,65 @@ def new_label_documentation(file_name, file_path, rotate, flip, nbre_passage):
             y = float(line[2])
             width = line[3]
             height = line[4]
-            #rotation
-            new_x, new_y, new_width, new_height = new_coordinates_rotation(x, y, rotate, width, height)
-            #flipping
+            # rotation
+            new_x, new_y, new_width, new_height = new_coordinates_rotation(
+                x, y, rotate, width, height
+            )
+            # flipping
             new_x, new_y = new_coordinates_flip(new_x, new_y, flip)
-            particle.append(f'{label} {new_x} {new_y} {new_width} {new_height} \n')
+            particle.append(f"{label} {new_x} {new_y} {new_width} {new_height} \n")
 
-    #save the label file
-    with open(os.path.join(YOLO_LABELS_PATH, 'augmented', f'AUG{nbre_passage}_{file_name.replace("jpg","txt")}'),'w') as f:
+    # save the label file
+    with open(
+        os.path.join(
+            YOLO_LABELS_PATH,
+            "augmented",
+            f'AUG{nbre_passage}_{file_name.replace("jpg","txt")}',
+        ),
+        "w",
+    ) as f:
         f.writelines(particle)
 
 
-
 from ddd.utils import *
-#augmentation de YOLO
+
+# augmentation de YOLO
 def augmentation_of_yolo():
 
-    #creation of the augmented directory if it does not exist
+    # creation of the augmented directory if it does not exist
     try:
-        os.listdir(os.path.join(YOLO_IMAGE_PATH, 'augmented'))
+        os.listdir(os.path.join(YOLO_IMAGE_PATH, "augmented"))
     except FileNotFoundError:
         print("There is no augmented train directory, creating it")
-        os.makedirs(os.path.join(YOLO_IMAGE_PATH, 'augmented'))
+        os.makedirs(os.path.join(YOLO_IMAGE_PATH, "augmented"))
 
     try:
-        os.listdir(os.path.join(YOLO_LABELS_PATH, 'augmented'))
+        os.listdir(os.path.join(YOLO_LABELS_PATH, "augmented"))
     except FileNotFoundError:
         print("There is no augmented train directory, creating it")
-        os.makedirs(os.path.join(YOLO_LABELS_PATH, 'augmented'))
+        os.makedirs(os.path.join(YOLO_LABELS_PATH, "augmented"))
 
-    #combination of the differents parameters of augmentation
-    degree = [math.pi/2, math.pi, 3/2*math.pi]
+    # combination of the differents parameters of augmentation
+    degree = [math.pi / 2, math.pi, 3 / 2 * math.pi]
     flipping_param = [1, 0, -1]
     combinaison = list(product(degree, flipping_param))
 
+    yolo_image_train_path = os.path.join(YOLO_IMAGE_PATH, "train")
 
-    yolo_image_train_path = os.path.join(YOLO_IMAGE_PATH, 'train')
-
-    #computing how many image we need to augment per viruses
+    # computing how many image we need to augment per viruses
     nb_to_create = dictionary_initialization(yolo_image_train_path)
 
-    #copy paste existing image
+    # copy paste existing image
     for image in os.listdir(yolo_image_train_path):
-        copyfile(os.path.join(yolo_image_train_path, image),
-                 os.path.join(YOLO_IMAGE_PATH, 'augmented', image))
-    for label in os.listdir(os.path.join(YOLO_LABELS_PATH, 'train')):
-        copyfile(os.path.join(YOLO_LABELS_PATH, 'train', label),
-                 os.path.join(YOLO_LABELS_PATH, 'augmented', label))
+        copyfile(
+            os.path.join(yolo_image_train_path, image),
+            os.path.join(YOLO_IMAGE_PATH, "augmented", image),
+        )
+    for label in os.listdir(os.path.join(YOLO_LABELS_PATH, "train")):
+        copyfile(
+            os.path.join(YOLO_LABELS_PATH, "train", label),
+            os.path.join(YOLO_LABELS_PATH, "augmented", label),
+        )
 
     # augmentation per viruses
     for key in nb_to_create:
@@ -826,12 +908,12 @@ def augmentation_of_yolo():
             degree = combinaison[nbr_passage][0]
             flip = combinaison[nbr_passage][1]
             for file in os.listdir(yolo_image_train_path):
-                ind= file.find('_')
+                ind = file.find("_")
                 virus = file[:ind]
                 if virus == key:
-                    #augementation de l'image
+                    # augementation de l'image
                     image_augmented(file, degree, flip, nbr_passage)
-                    #écriture du document label
+                    # écriture du document label
                     file_path = get_label_file(file)
                     new_label_documentation(file, file_path, degree, flip, nbr_passage)
                     nb_to_create[virus] = nb_to_create[virus] - 1
@@ -840,5 +922,5 @@ def augmentation_of_yolo():
             nbr_passage += 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     augmentation_of_yolo()
