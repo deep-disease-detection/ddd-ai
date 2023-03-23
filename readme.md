@@ -52,7 +52,7 @@ For all of the above tasks, we used the python opencv package.
 ## Models
 We tried several architectures that were proposed in the [scientific paper](https://www.sciencedirect.com/science/article/pii/S0169260721003928)
 
-<img src="https://ars.els-cdn.com/content/image/1-s2.0-S0169260721003928-gr2.jpg"> &nbsp;
+<img src="https://ars.els-cdn.com/content/image/1-s2.0-S0169260721003928-gr2.jpg"> </br>
 *Source: Damian J. Matuszewski, Ida-Maria Sintorn,
 TEM virus images: Benchmark dataset and deep learning classification*
 
