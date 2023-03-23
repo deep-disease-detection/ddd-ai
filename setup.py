@@ -8,11 +8,11 @@ requirements = [x.strip() for x in content if "git+" not in x]
 
 setup(
     name="ddd",
-    version="0.0.6",
-    description="Deep Disease Detection Model",
+    version="1.0.0",
+    description="Virus classification from TEM microscope images using deep learning CNN architectures",
     license="MIT",
-    author="Deep Disease Detection",
-    author_email="youselouard@gmail.com",
+    author="Walid Abdaoui, Sabrina Dacelo, Laura Desire, Youssef El Ouard",
+    author_email="abdaoui.wa@gmail.com, laura.desire98@gmail.com, youselouard@gmail.com, sabrina.dacelo@gmail.com",
     url="https://github.com/deep-disease-detection/ddd-ai",
     install_requires=requirements,
     packages=find_packages(),
