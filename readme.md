@@ -38,7 +38,7 @@ For our classification task, the goal of the data preprocessing pipeline is to:
 Data preprocessing involved several key steps.
 
 - **Loading and formatting** the data from the image folders and the annotations : virus particle positions and class
-- **Resize** the image: Microscope images have different resolutions (nm per pixel). Using the meta-data of the picture, we make sure to rescale the X and Y axis of the image to have the same resolution accross all images.
+- **Resize** the image: Microscope images have different resolutions (nm per pixel). Using the meta-data of the picture, we make sure to rescale the X and Y axis of the image to have the same resolution accross all images. We used LANCZOS3 Kernel interpolation to resize the images.
 - **Min-max scale** the image: The pixel values were not normalized, so we made sure they were integers between 0 and 255 to be able to save the pictures as .png later on.
 - Add **padding**: Add 256px padding on all sides of the image to avoid potential issues when cropping the viruses. We used mirror padding for this.
 - **Crop** around the viruses: Using the meta-data collected (position of each virus particle on each image), generate 256x256px images around each virus.
